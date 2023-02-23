@@ -32,4 +32,11 @@ public class DbModels
         public string Name { get; set; } = null!;
         public string LongName { get; set; } = null!;
     }
+    public class TabComputers
+    {
+        [Key]
+        public string Name { get; set; } = null!;
+        public int Room { get; set; }
+        public DateTime LastSeen { get; set; }
+    }
 }

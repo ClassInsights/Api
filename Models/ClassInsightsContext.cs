@@ -11,4 +11,5 @@ public class ClassInsightsContext : DbContext
         public DbSet<DbModels.TabUsers> TabUsers { get; set; } = null!;
         public DbSet<DbModels.TabLessons> TabLessons { get; set; } = null!;
         public DbSet<DbModels.TabRooms> TabRooms { get; set; } = null!;
+        public DbSet<DbModels.TabComputers> TabComputers { get; set; } = null!;
 }
