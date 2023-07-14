@@ -8,7 +8,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<ClassInsightsContext>(opt => opt.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer")));
+builder.Services.AddDbContext<ClassInsightsContext>(opt =>
+{
+    opt.EnableSensitiveDataLogging();
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"));
+});
 
 var app = builder.Build();
 
@@ -22,12 +26,13 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-
 app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.UseWebSockets();
 
 app.MapControllers();
 
