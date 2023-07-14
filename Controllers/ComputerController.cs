@@ -1,4 +1,5 @@
-﻿using Api.Models;
+﻿using System.Net.NetworkInformation;
+using Api.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
@@ -13,16 +14,16 @@ public class ComputerController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> AddComputerTask(DbModels.TabComputers computer)
     {
-        var result = computer;
         if (await _context.TabComputers.FindAsync(computer.Name) is { } pc)
         {
             pc.LastSeen = computer.LastSeen;
             pc.Room = computer.Room;
-            result = pc;
+            pc.Mac = computer.Mac;
+            pc.Ip = computer.Ip;
         }
         else await _context.TabComputers.AddAsync(computer);
 
         await _context.SaveChangesAsync();
-        return Ok(result);
+        return Ok(computer);
     }
 }
