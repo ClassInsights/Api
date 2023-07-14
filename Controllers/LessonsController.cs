@@ -1,7 +1,6 @@
 ﻿using Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace Api.Controllers;
 
@@ -17,5 +16,23 @@ public class LessonsController : ControllerBase
     {
         var lessons = await _context.TabLessons.Where(x => x.Room == roomId).ToListAsync();
         return Ok(lessons.Where(x => x.StartTime.DayOfWeek == DateTime.Now.DayOfWeek).ToList());
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddLessons(List<DbModels.TabLessons> lessons)
+    {
+        if (!lessons.Any()) return Ok();
+
+        // delete all lessons
+        await _context.TabLessons.ExecuteDeleteAsync();
+
+        // reset auto increment id
+        await _context.Database.ExecuteSqlRawAsync("DBCC CHECKIDENT (tabLessons, RESEED, 0);");
+
+        // add new lessons
+        await _context.TabLessons.AddRangeAsync(lessons);
+        await _context.SaveChangesAsync();
+
+        return Ok();
     }
 }
