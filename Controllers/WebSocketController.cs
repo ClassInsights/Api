@@ -19,6 +19,7 @@ public class WebSocketController : ControllerBase
             return;
         }
 
+        // check if any websockets for requested room
         if (!RoomWebSockets.TryGetValue(room, out var roomWebSockets))
         {
             HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
@@ -27,13 +28,15 @@ public class WebSocketController : ControllerBase
         
         using var clientWebSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
-        // filter websockets which are still alive
-        roomWebSockets = roomWebSockets.Where(x => x.Value.State == WebSocketState.Open)
-            .ToDictionary(i => i.Key, i => i.Value);
-
         // while connection is alive, read pc websockets and send result to client websocket
         while (!clientWebSocket.CloseStatus.HasValue)
         {
+            // receive new websockets
+            if (!RoomWebSockets.TryGetValue(room, out roomWebSockets)) break;
+
+            // filter websockets which are still alive
+            roomWebSockets = roomWebSockets.Where(x => x.Value.State == WebSocketState.Open).ToDictionary(i => i.Key, i => i.Value);
+        
             var heartbeats = new List<Heartbeat>();
 
             foreach (var (_, pcWebSocket) in roomWebSockets)
