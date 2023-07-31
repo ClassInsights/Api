@@ -14,6 +14,19 @@ public class LessonsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetLessons(int roomId)
     {
+        if (roomId != 0)
+            return await GetLessonsById(roomId);
+        return await GetAllLessons();
+    }
+
+    private async Task<IActionResult> GetAllLessons()
+    {
+        var lessons = await _context.TabLessons.ToListAsync();
+        return Ok(lessons);
+    }
+
+    private async Task<IActionResult> GetLessonsById(int roomId)
+    {
         var lessons = await _context.TabLessons.Where(x => x.Room == roomId).ToListAsync();
         return Ok(lessons.Where(x => x.StartTime.DayOfWeek == DateTime.Now.DayOfWeek).ToList());
     }
