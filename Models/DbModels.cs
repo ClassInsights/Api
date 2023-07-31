@@ -42,4 +42,18 @@ public class DbModels
         public int Room { get; set; }
         public DateTime LastSeen { get; set; }
     }
+    public class TabClasses
+    {
+        [Key]
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Head { get; set; }
+        public string? Group { get; set; }
+    }
+    public class TabGroups
+    {
+        [Key]
+        public string Id { get; set; }
+        public string Name { get; set; }
+    }
 }
