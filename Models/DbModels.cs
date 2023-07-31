@@ -37,8 +37,8 @@ public class DbModels
     {
         [Key]
         public string Name { get; set; } = null!;
-        public string Ip { get; set; } = null!;
-        public string Mac { get; set; } = null!;
+        public string? Ip { get; set; }
+        public string? Mac { get; set; }
         public int Room { get; set; }
         public DateTime LastSeen { get; set; }
     }
