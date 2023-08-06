@@ -11,6 +11,11 @@ public class ComputerController : ControllerBase
     private readonly ClassInsightsContext _context;
     public ComputerController(ClassInsightsContext context) => _context = context;
 
+    /// <summary>
+    /// Is used to add or update an existing computer
+    /// </summary>
+    /// <param name="computer">Heartbeat object with the newest data from a computer</param>
+    /// <returns></returns>
     [HttpPost]
     public async Task<IActionResult> AddComputerTask(DbModels.TabComputers computer)
     {
