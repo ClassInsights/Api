@@ -1,5 +1,6 @@
 ﻿using System.Net.NetworkInformation;
 using Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
@@ -30,5 +31,14 @@ public class ComputerController : ControllerBase
 
         await _context.SaveChangesAsync();
         return Ok(computer);
+    }
+
+    [Authorize]
+    [HttpDelete]
+    public async Task<IActionResult> ShutdownComputer(int id)
+    {
+        var claims = HttpContext.User.Claims;
+        var a = HttpContext.User.Identity.Name;
+        return Ok();
     }
 }
