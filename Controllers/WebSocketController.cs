@@ -107,15 +107,18 @@ public class WebSocketController : ControllerBase
     private class Heartbeat
     {
         public string Type { get; set; } = null!;
-        public int Room { get; set; }
         public string Name { get; set; } = null!;
+        public int Room { get; set; }
         public Data? Data { get; set; }
     }
 
     private class Data
     {
         public float Power { get; set; }
-        public string? Token { get; set; }
+        public float RamUsage { get; set; }
+        public List<float>? CpuUsage { get; set; }
+        public List<float>? DiskUsages { get; set; }
+        public List<Dictionary<string, float>>? EthernetUsages { get; set; }
     }
 
     private static async Task SendTextAsync(string text, WebSocket webSocket)
