@@ -8,10 +8,10 @@ namespace Api.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)] // ignore in swagger
 public class WebSocketController : ControllerBase
 {
-    private static readonly Dictionary<int, Dictionary<string, WebSocket>> RoomWebSockets = new();
+    private static readonly Dictionary<int, WebSocket> PcWebSockets = new();
 
     [Route("/ws")]
-    public async Task GetApp(int room)
+    public async Task GetApp(int pc)
     {
         if (!HttpContext.WebSockets.IsWebSocketRequest)
         {
@@ -19,8 +19,8 @@ public class WebSocketController : ControllerBase
             return;
         }
 
-        // check if any websockets for requested room
-        if (!RoomWebSockets.TryGetValue(room, out var roomWebSockets))
+        // check if any websockets for requested pc
+        if (!PcWebSockets.TryGetValue(pc, out var pcWebSocket))
         {
             HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
             return;
@@ -31,33 +31,13 @@ public class WebSocketController : ControllerBase
         // while connection is alive, read pc websockets and send result to client websocket
         while (!clientWebSocket.CloseStatus.HasValue)
         {
-            // receive new websockets
-            if (!RoomWebSockets.TryGetValue(room, out roomWebSockets)) break;
-
-            // filter websockets which are still alive
-            roomWebSockets = roomWebSockets.Where(x => x.Value.State == WebSocketState.Open).ToDictionary(i => i.Key, i => i.Value);
-        
-            var heartbeats = new List<Heartbeat>();
-
-            foreach (var (_, pcWebSocket) in roomWebSockets)
+            // skip if close handshake is performed
+            if (pcWebSocket.State == WebSocketState.Open && await ReadTextAsync(pcWebSocket) is { } result)
             {
-                // skip closed websockets
-                if (pcWebSocket.State != WebSocketState.Open)
-                    continue;
-
-                var result = await ReadTextAsync(pcWebSocket);
-                
-                // skip if close handshake is performed
-                if (result is null)
-                    continue;
-
                 var heartbeat = JsonConvert.DeserializeObject<Heartbeat>(result);
                 if (heartbeat != null)
-                    heartbeats.Add(heartbeat);
+                    await SendTextAsync(JsonConvert.SerializeObject(heartbeat), clientWebSocket);
             }
-
-            if (heartbeats.Count > 0)
-                await SendTextAsync(JsonConvert.SerializeObject(heartbeats), clientWebSocket);
             else await Task.Delay(500);
         }
 
@@ -92,14 +72,8 @@ public class WebSocketController : ControllerBase
         if (heartbeat is null)
             return;
 
-        // add socket to static dictionary, so we can access it later (create pc dictionary if not exists)
-        if (!RoomWebSockets.TryGetValue(heartbeat.Room, out var pcWebSockets))
-        {
-            pcWebSockets = new Dictionary<string, WebSocket>();
-            RoomWebSockets[heartbeat.Room] = pcWebSockets;
-        }
-
-        pcWebSockets[heartbeat.Name] = webSocket;
+        // add socket to static dictionary, so we can access it later
+        PcWebSockets[heartbeat.PcId] = webSocket;
 
         while (webSocket.State != WebSocketState.Closed) await Task.Delay(10000); // keep websocket alive
     }
@@ -109,6 +83,7 @@ public class WebSocketController : ControllerBase
         public string Type { get; set; } = null!;
         public string Name { get; set; } = null!;
         public int Room { get; set; }
+        public int PcId { get; set; }
         public Data? Data { get; set; }
     }
 
