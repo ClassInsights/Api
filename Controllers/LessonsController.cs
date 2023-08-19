@@ -1,4 +1,5 @@
 ﻿using Api.Models;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,7 +10,13 @@ namespace Api.Controllers;
 public class LessonsController : ControllerBase
 {
     private readonly ClassInsightsContext _context;
-    public LessonsController(ClassInsightsContext context) => _context = context;
+    private readonly IMapper _mapper;
+
+    public LessonsController(ClassInsightsContext context, IMapper mapper)
+    {
+        _context = context;
+        _mapper = mapper;
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetLessons(int roomId)
@@ -27,12 +34,12 @@ public class LessonsController : ControllerBase
 
     private async Task<IActionResult> GetLessonsById(int roomId)
     {
-        var lessons = await _context.TabLessons.Where(x => x.Room == roomId).ToListAsync();
-        return Ok(lessons.Where(x => x.StartTime.DayOfWeek == DateTime.Now.DayOfWeek).ToList());
+        var lessons = await _context.TabLessons.Where(x => x.RoomId == roomId).ToListAsync();
+        return Ok(lessons.Where(x => x.StartTime?.DayOfWeek == DateTime.Now.DayOfWeek).ToList());
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddLessons(List<DbModels.TabLessons> lessons)
+    public async Task<IActionResult> AddLessons(List<ApiModels.Lesson> lessons)
     {
         if (!lessons.Any()) return Ok();
 
@@ -43,7 +50,7 @@ public class LessonsController : ControllerBase
         await _context.Database.ExecuteSqlRawAsync("DBCC CHECKIDENT (tabLessons, RESEED, 0);");
 
         // add new lessons
-        await _context.TabLessons.AddRangeAsync(lessons);
+        await _context.TabLessons.AddRangeAsync(_mapper.Map<List<TabLesson>>(lessons));
         await _context.SaveChangesAsync();
 
         return Ok();

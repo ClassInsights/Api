@@ -2,9 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Api.Models;
 using System.Reflection;
 using System.Text;
+using Api;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using AutoMapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,6 +69,16 @@ builder.Services.AddAuthentication(c =>
 });
 
 builder.Services.AddAuthorization();
+
+
+// Auto Mapper Configurations
+var mapperConfig = new MapperConfiguration(mc =>
+{
+    mc.AddProfile(new MappingProfile());
+});
+
+builder.Services.AddSingleton(mapperConfig.CreateMapper());
+
 
 var app = builder.Build();
 

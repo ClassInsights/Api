@@ -31,7 +31,7 @@ public class RoomController : ControllerBase
 
     private async Task<IActionResult> GetComputersById(int roomId)
     {
-        var computers = await _context.TabComputers.Where(x => x.Room == roomId).ToListAsync();
+        var computers = await _context.TabComputers.Where(x => x.RoomId == roomId).ToListAsync();
         return Ok(computers);
     }
 }
