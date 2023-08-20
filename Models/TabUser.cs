@@ -1,6 +1,9 @@
-﻿namespace Api.Models;
+﻿using System;
+using System.Collections.Generic;
 
-public class TabUser
+namespace Api.Models;
+
+public partial class TabUser
 {
     public int UserId { get; set; }
 

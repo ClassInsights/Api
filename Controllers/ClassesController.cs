@@ -72,7 +72,7 @@ public class ClassesController : ControllerBase
                 {
                     if (await _context.TabGroups.FindAsync(klasse.AzureGroupID) is null)
                         return NotFound($"{klasse.AzureGroupID} does not exist!");
-                    dbClass.AzureGroupID = klasse.AzureGroupID;
+                    dbClass.AzureGroupId = klasse.AzureGroupID;
                 }
                 _context.TabClasses.Update(dbClass);
             }

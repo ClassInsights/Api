@@ -1,4 +1,7 @@
-﻿namespace Api.Models;
+﻿using System;
+using System.Collections.Generic;
+
+namespace Api.Models;
 
 public partial class TabRoom
 {

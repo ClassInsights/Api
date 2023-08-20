@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Models;
 
@@ -13,11 +15,11 @@ public partial class ClassInsightsContext : DbContext
     {
     }
 
+    public virtual DbSet<TabAzureGroup> TabAzureGroups { get; set; }
+
     public virtual DbSet<TabClass> TabClasses { get; set; }
 
     public virtual DbSet<TabComputer> TabComputers { get; set; }
-
-    public virtual DbSet<TabGroup> TabGroups { get; set; }
 
     public virtual DbSet<TabLesson> TabLessons { get; set; }
 
@@ -27,8 +29,24 @@ public partial class ClassInsightsContext : DbContext
 
     public virtual DbSet<TabUser> TabUsers { get; set; }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=.\\SQLEXPRESS;Database=ClassInsights;Trusted_Connection=True;TrustServerCertificate=True;");
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<TabAzureGroup>(entity =>
+        {
+            entity.HasKey(e => e.GroupId).HasName("PK_tabClasses");
+
+            entity.ToTable("tabAzureGroup");
+
+            entity.Property(e => e.GroupId)
+                .HasMaxLength(50)
+                .HasColumnName("GroupID");
+            entity.Property(e => e.Name).HasMaxLength(50);
+        });
+
         modelBuilder.Entity<TabClass>(entity =>
         {
             entity.HasKey(e => e.ClassId).HasName("PK_tabClasses_1");
@@ -38,12 +56,14 @@ public partial class ClassInsightsContext : DbContext
             entity.Property(e => e.ClassId)
                 .ValueGeneratedNever()
                 .HasColumnName("ClassID");
-            entity.Property(e => e.AzureGroupID).HasMaxLength(50);
+            entity.Property(e => e.AzureGroupId)
+                .HasMaxLength(50)
+                .HasColumnName("AzureGroupID");
             entity.Property(e => e.Head).HasMaxLength(20);
             entity.Property(e => e.Name).HasMaxLength(20);
 
-            entity.HasOne(d => d.GroupNavigation).WithMany(p => p.TabClasses)
-                .HasForeignKey(d => d.AzureGroupID)
+            entity.HasOne(d => d.AzureGroup).WithMany(p => p.TabClasses)
+                .HasForeignKey(d => d.AzureGroupId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_tabClasses_tabGroups");
         });
@@ -57,6 +77,7 @@ public partial class ClassInsightsContext : DbContext
             entity.Property(e => e.ComputerId).HasColumnName("ComputerID");
             entity.Property(e => e.IpAddress).HasMaxLength(50);
             entity.Property(e => e.LastSeen).HasColumnType("datetime");
+            entity.Property(e => e.LastUser).HasMaxLength(75);
             entity.Property(e => e.MacAddress).HasMaxLength(50);
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.RoomId).HasColumnName("RoomID");
@@ -64,18 +85,6 @@ public partial class ClassInsightsContext : DbContext
             entity.HasOne(d => d.Room).WithMany(p => p.TabComputers)
                 .HasForeignKey(d => d.RoomId)
                 .HasConstraintName("FK_tabComputers_tabRooms");
-        });
-
-        modelBuilder.Entity<TabGroup>(entity =>
-        {
-            entity.HasKey(e => e.GroupId).HasName("PK_tabClasses");
-
-            entity.ToTable("tabGroup");
-
-            entity.Property(e => e.GroupId)
-                .HasMaxLength(50)
-                .HasColumnName("GroupID");
-            entity.Property(e => e.Name).HasMaxLength(50);
         });
 
         modelBuilder.Entity<TabLesson>(entity =>

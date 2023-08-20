@@ -1,4 +1,7 @@
-﻿namespace Api.Models;
+﻿using System;
+using System.Collections.Generic;
+
+namespace Api.Models;
 
 public partial class TabComputer
 {
@@ -13,6 +16,8 @@ public partial class TabComputer
     public string? IpAddress { get; set; }
 
     public DateTime LastSeen { get; set; }
+
+    public string? LastUser { get; set; }
 
     public virtual TabRoom Room { get; set; } = null!;
 }
