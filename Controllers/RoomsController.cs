@@ -7,12 +7,12 @@ namespace Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class RoomController : ControllerBase
+public class RoomsController : ControllerBase
 {
     private readonly ClassInsightsContext _context;
     private readonly IMapper _mapper;
 
-    public RoomController(ClassInsightsContext context, IMapper mapper)
+    public RoomsController(ClassInsightsContext context, IMapper mapper)
     {
         _context = context;
         _mapper = mapper;
