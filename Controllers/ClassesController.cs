@@ -19,6 +19,19 @@ public class ClassesController : ControllerBase
     }
 
     /// <summary>
+    /// Find class by Name
+    /// </summary>
+    /// <param name="name">Name of class</param>
+    /// <returns><see cref="ApiModels.Class"/></returns>
+    [HttpGet("{name}")]
+    public async Task<IActionResult> GetClass(string name)
+    {
+        if (await _context.TabClasses.FirstOrDefaultAsync(x => x.Name == name) is { } klasse)
+            return Ok(_mapper.Map<ApiModels.Class>(klasse));
+        return NotFound();
+    }
+
+    /// <summary>
     /// Get information from Class
     /// </summary>
     /// <param name="classId">Id of specific class</param>
@@ -55,17 +68,17 @@ public class ClassesController : ControllerBase
             {
                 dbClass.Name = klasse.Name;
                 dbClass.Head = klasse.Head;
-                if (klasse.Group is not null)
+                if (klasse.AzureGroupID is not null)
                 {
-                    if (await _context.TabGroups.FindAsync(klasse.Group) is null)
-                        return NotFound($"{klasse.Group} does not exist!");
-                    dbClass.AzureGroupID = klasse.Group;
+                    if (await _context.TabGroups.FindAsync(klasse.AzureGroupID) is null)
+                        return NotFound($"{klasse.AzureGroupID} does not exist!");
+                    dbClass.AzureGroupID = klasse.AzureGroupID;
                 }
                 _context.TabClasses.Update(dbClass);
             }
             else
             {
-                if (klasse.Group is null)
+                if (klasse.AzureGroupID is null)
                 {
                     // todo: microsoft api get group id
                 }
