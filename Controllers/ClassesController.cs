@@ -18,6 +18,31 @@ public class ClassesController : ControllerBase
         _mapper = mapper;
     }
 
+    /// <summary>
+    /// Get information from Class
+    /// </summary>
+    /// <param name="classId">Id of specific class</param>
+    /// <param name="search">Type of which information should be returned</param>
+    /// <returns>Information which was requested with <see cref="search"/></returns>
+    [HttpGet("{classId:int}")]
+    public async Task<IActionResult> GetClassInformation(int classId, string search = "currentLesson")
+    {
+        if (search != "currentLesson")
+            return BadRequest();
+
+        // receive all lessons of class
+        var lessons = await _context.TabLessons.Where(x => x.ClassId == classId).ToListAsync();
+        
+        // check minimum positive of difference between now and future
+        var currentLesson = lessons.Where(x => (x.EndTime - DateTime.Now)?.TotalMilliseconds > 0).MinBy(x => x.EndTime - DateTime.Now);
+
+        // all lessons are over
+        if (currentLesson == null)
+            return Ok();
+
+        return Ok(_mapper.Map<ApiModels.Lesson>(currentLesson));
+    }
+
     [HttpPost]
     public async Task<IActionResult> AddOrUpdateClasses(List<ApiModels.Class> classes)
     {
