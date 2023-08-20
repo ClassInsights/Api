@@ -68,6 +68,12 @@ builder.Services.AddAuthentication(c =>
     };
 });
 
+// generate lowercase URLs
+builder.Services.Configure<RouteOptions>(options =>
+{
+    options.LowercaseUrls = true;
+});
+
 builder.Services.AddAuthorization();
 
 

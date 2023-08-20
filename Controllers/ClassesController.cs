@@ -7,12 +7,12 @@ namespace Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ClassController : ControllerBase
+public class ClassesController : ControllerBase
 {
     private readonly ClassInsightsContext _context;
     private readonly IMapper _mapper;
 
-    public ClassController(ClassInsightsContext context, IMapper mapper)
+    public ClassesController(ClassInsightsContext context, IMapper mapper)
     {
         _context = context;
         _mapper = mapper;
@@ -34,7 +34,7 @@ public class ClassController : ControllerBase
                 {
                     if (await _context.TabGroups.FindAsync(klasse.Group) is null)
                         return NotFound($"{klasse.Group} does not exist!");
-                    dbClass.Group = klasse.Group;
+                    dbClass.AzureGroupID = klasse.Group;
                 }
                 _context.TabClasses.Update(dbClass);
             }
