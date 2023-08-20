@@ -8,7 +8,7 @@ public class TabClass
 
     public string Head { get; set; } = null!;
 
-    public string? Group { get; set; }
+    public string? AzureGroupID { get; set; }
 
     public virtual TabGroup? GroupNavigation { get; set; }
 

@@ -38,12 +38,12 @@ public partial class ClassInsightsContext : DbContext
             entity.Property(e => e.ClassId)
                 .ValueGeneratedNever()
                 .HasColumnName("ClassID");
-            entity.Property(e => e.Group).HasMaxLength(50);
+            entity.Property(e => e.AzureGroupID).HasMaxLength(50);
             entity.Property(e => e.Head).HasMaxLength(20);
             entity.Property(e => e.Name).HasMaxLength(20);
 
             entity.HasOne(d => d.GroupNavigation).WithMany(p => p.TabClasses)
-                .HasForeignKey(d => d.Group)
+                .HasForeignKey(d => d.AzureGroupID)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_tabClasses_tabGroups");
         });
