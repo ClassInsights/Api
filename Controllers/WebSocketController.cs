@@ -73,17 +73,18 @@ public class WebSocketController : ControllerBase
             return;
 
         // add socket to static dictionary, so we can access it later
-        PcWebSockets[heartbeat.PcId] = webSocket;
+        PcWebSockets[heartbeat.ComputerId] = webSocket;
 
         while (webSocket.State != WebSocketState.Closed) await Task.Delay(10000); // keep websocket alive
     }
 
     private class Heartbeat
     {
+        public int ComputerId { get; set; }
         public string Type { get; set; } = null!;
         public string Name { get; set; } = null!;
         public int Room { get; set; }
-        public int PcId { get; set; }
+        public DateTime UpTime { get; set; }
         public Data? Data { get; set; }
     }
 
