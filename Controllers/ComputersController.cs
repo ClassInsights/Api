@@ -21,11 +21,13 @@ public class ComputersController : ControllerBase
     /// <summary>
     /// Is used to add or update an existing computer
     /// </summary>
-    /// <param name="computer">Heartbeat object with the newest data from a computer</param>
-    /// <returns></returns>
+    /// <param name="computer">Updated Computer object</param>
+    /// <returns><seealso cref="ApiModels.Computer"/></returns>
     [HttpPost]
     public async Task<IActionResult> AddComputerTask(ApiModels.Computer computer)
     {
+        if (HttpContext.User.Identity?.Name is { } name) computer = computer with { LastUser = name };
+
         if (await _context.TabComputers.FindAsync(computer.ComputerId) is { } pc)
         {
             pc.Name = computer.Name;
@@ -33,6 +35,7 @@ public class ComputersController : ControllerBase
             pc.LastSeen = computer.LastSeen;
             pc.RoomId = computer.RoomId;
             pc.IpAddress = computer.IpAddress;
+            pc.LastUser = computer.LastUser;
         }
         else await _context.TabComputers.AddAsync(_mapper.Map<TabComputer>(computer));
 
