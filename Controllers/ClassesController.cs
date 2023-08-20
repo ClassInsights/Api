@@ -70,7 +70,7 @@ public class ClassesController : ControllerBase
                 dbClass.Head = klasse.Head;
                 if (klasse.AzureGroupID is not null)
                 {
-                    if (await _context.TabGroups.FindAsync(klasse.AzureGroupID) is null)
+                    if (await _context.TabAzureGroups.FindAsync(klasse.AzureGroupID) is null)
                         return NotFound($"{klasse.AzureGroupID} does not exist!");
                     dbClass.AzureGroupId = klasse.AzureGroupID;
                 }
