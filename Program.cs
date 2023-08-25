@@ -54,7 +54,8 @@ builder.Services.AddAuthentication(c =>
     c.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     c.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     c.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(c =>
+}).AddNegotiate()
+    .AddJwtBearer(c =>
 {
     c.TokenValidationParameters = new TokenValidationParameters
     {

@@ -1,8 +1,11 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
+using System.Net.Security;
 using System.Security.Claims;
+using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using Azure.Identity;
+using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Graph;
@@ -18,12 +21,12 @@ namespace Api.Controllers;
 [ApiController]
 public class UserController : ControllerBase
 {
-    private readonly IConfiguration _configuration;
+    private readonly IConfiguration _config;
 
     /// <inheritdoc />
-    public UserController(IConfiguration configuration)
+    public UserController(IConfiguration config)
     {
-        _configuration = configuration;
+        _config = config;
     }
 
     /// <summary>
@@ -38,14 +41,14 @@ public class UserController : ControllerBase
         // connect to graph api
         var graphClient = new GraphServiceClient(
             new AuthorizationCodeCredential(
-                _configuration["AzureAd:TenantId"],
-                _configuration["AzureAd:ClientId"],
-                _configuration.GetSection("AzureAd:ClientCredentials").GetChildren().First()["ClientSecret"],
+                _config["AzureAd:TenantId"],
+                _config["AzureAd:ClientId"],
+                _config.GetSection("AzureAd:ClientCredentials").GetChildren().First()["ClientSecret"],
                 code,
                 new AuthorizationCodeCredentialOptions
                 {
                     AuthorityHost = AzureAuthorityHosts.AzurePublicCloud,
-                    RedirectUri = new Uri(_configuration["AzureAd:RedirectUri"] ?? string.Empty),
+                    RedirectUri = new Uri(_config["AzureAd:RedirectUri"] ?? string.Empty),
                 })
             );
 
@@ -71,7 +74,7 @@ public class UserController : ControllerBase
         else
         {
             var groupIds = groups.Value.Where(g => g.Id is not null).Select(g => g.Id!).ToList();
-            if (groupIds.Contains(_configuration["TeacherGroup"] ?? string.Empty))
+            if (groupIds.Contains(_config["TeacherGroup"] ?? string.Empty))
                 role = "Teacher";
             else if (groups.Value.Select(x => (Group) x).Where(x => Regex.IsMatch(x.DisplayName ?? "", "^[0-9]{4}_[a-zA-Z]+$")) is { } classGroups)
             {
@@ -111,9 +114,37 @@ public class UserController : ControllerBase
         return token is null ? Unauthorized() : Ok(token);
     }
 
+    /// <summary>
+    /// Login Endpoint for Computers
+    /// </summary>
+    /// <returns>Jwt Bearer Token</returns>
+    //[AllowAnonymous]
+    [Authorize(AuthenticationSchemes = NegotiateDefaults.AuthenticationScheme)]
+    [HttpGet("pc/login")]
+    public IActionResult LoginByWinAuth()
+    {
+        if (HttpContext.User.Identity is not WindowsIdentity { IsAuthenticated: true } identity) return BadRequest();
+
+        var subjects = new ClaimsIdentity(new[]
+        {
+            new Claim(JwtRegisteredClaimNames.Name, identity.Name),
+        });
+
+        if (identity.User?.Value is { } sid)
+            subjects.AddClaim(new Claim(JwtRegisteredClaimNames.Sub, sid));
+
+        if (identity.User != null && _config["DomainSid"] is { } domainSid && identity.User.IsEqualDomainSid(new SecurityIdentifier(domainSid)))
+            subjects.AddClaim(new Claim(ClaimTypes.Role, "Student"));
+        else // // if user is not in domain then there is no user logged in on pc
+            subjects.AddClaim(new Claim(ClaimTypes.Role, "Guest"));
+
+        var token = GenJwtToken(subjects);
+        return token is null ? Unauthorized() : Ok(token);
+    }
+
     private string? GenJwtToken(ClaimsIdentity subject)
     {
-        var key = _configuration["Jwt:Key"];
+        var key = _config["Jwt:Key"];
         if (key is null)
             return null;
 
@@ -121,8 +152,8 @@ public class UserController : ControllerBase
         {
             Subject = subject,
             Expires = DateTime.UtcNow.AddMinutes(10),
-            Issuer = _configuration["Jwt:Issuer"],
-            Audience = _configuration["Jwt:Audience"],
+            Issuer = _config["Jwt:Issuer"],
+            Audience = _config["Jwt:Audience"],
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)), SecurityAlgorithms.HmacSha256)
         };
 
