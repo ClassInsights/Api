@@ -8,5 +8,5 @@ public class ApiModels
 
     public record Computer(int ComputerId, int RoomId, string Name, string MacAddress, string IpAddress, string? LastUser, DateTime LastSeen);
 
-    public record Room(int RoomId, string Name, string LongName);
+    public record Room(int RoomId, string Name, string LongName, int? DeviceCount);
 }

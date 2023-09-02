@@ -36,6 +36,14 @@ public class RoomsController : ControllerBase
         };
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetRooms()
+    {
+        var rooms = await _context.TabRooms.Include(tabRoom => tabRoom.TabComputers).ToListAsync();
+        var responseRooms = rooms.Select(room => new ApiModels.Room(room.RoomId, room.Name!, room.LongName!, room.TabComputers.Count)).ToList();
+        return Ok(responseRooms);
+    }
+
     private async Task<IActionResult> GetComputers(int roomId)
     {
         var computers = await _context.TabComputers.Where(x => x.RoomId == roomId).ToListAsync();
