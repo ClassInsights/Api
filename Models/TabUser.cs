@@ -19,7 +19,7 @@ public partial class TabUser
 
     public string? RefreshToken { get; set; }
 
-    public string? AccessToken { get; set; }
+    public DateTime? LastSeen { get; set; }
 
     public virtual TabClass? Class { get; set; }
 }

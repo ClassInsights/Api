@@ -29,10 +29,6 @@ public partial class ClassInsightsContext : DbContext
 
     public virtual DbSet<TabUser> TabUsers { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=.\\SQLEXPRESS;Database=ClassInsights;Trusted_Connection=True;TrustServerCertificate=True;");
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<TabAzureGroup>(entity =>
@@ -146,7 +142,6 @@ public partial class ClassInsightsContext : DbContext
             entity.ToTable("tabUser");
 
             entity.Property(e => e.UserId).HasColumnName("UserID");
-            entity.Property(e => e.AccessToken).HasMaxLength(50);
             entity.Property(e => e.AzureUserId)
                 .HasMaxLength(75)
                 .HasColumnName("AzureUserID");
@@ -154,7 +149,8 @@ public partial class ClassInsightsContext : DbContext
             entity.Property(e => e.Email).HasMaxLength(100);
             entity.Property(e => e.FirstName).HasMaxLength(100);
             entity.Property(e => e.LastName).HasMaxLength(100);
-            entity.Property(e => e.RefreshToken).HasMaxLength(50);
+            entity.Property(e => e.LastSeen).HasColumnType("datetime");
+            entity.Property(e => e.RefreshToken).HasMaxLength(200);
 
             entity.HasOne(d => d.Class).WithMany(p => p.TabUsers)
                 .HasForeignKey(d => d.ClassId)
