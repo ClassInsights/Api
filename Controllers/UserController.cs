@@ -115,27 +115,35 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
-    /// Login Endpoint for Computers
+    ///     Login Endpoint for Computers
     /// </summary>
     /// <returns>Jwt Bearer Token</returns>
-    //[AllowAnonymous]
     [Authorize(AuthenticationSchemes = NegotiateDefaults.AuthenticationScheme)]
-    [HttpGet("pc/login")]
-    public IActionResult LoginByWinAuth()
+    [HttpGet("login/pc")]
+    public async Task<IActionResult> LoginByWinAuth()
     {
-        if (HttpContext.User.Identity is not WindowsIdentity { IsAuthenticated: true } identity) return BadRequest();
+        if (HttpContext.User.Identity is not WindowsIdentity { IsAuthenticated: true } identity)
+            return BadRequest();
+
+        if (await HttpContext.Connection.GetClientCertificateAsync() is not
+            { } clientCertificate /* || !clientCertificate.Verify()*/)
+            return BadRequest();
+
+        if (clientCertificate.Thumbprint != _config["CertificateThumbprint"]?.ToUpper())
+            return Unauthorized("Invalid certificate");
 
         var subjects = new ClaimsIdentity(new[]
         {
-            new Claim(JwtRegisteredClaimNames.Name, identity.Name),
+            new Claim(JwtRegisteredClaimNames.Name, identity.Name)
         });
 
         if (identity.User?.Value is { } sid)
             subjects.AddClaim(new Claim(JwtRegisteredClaimNames.Sub, sid));
 
-        if (identity.User != null && _config["DomainSid"] is { } domainSid && identity.User.IsEqualDomainSid(new SecurityIdentifier(domainSid)))
+        if (identity.User != null && _config["DomainSid"] is { } domainSid &&
+            identity.User.IsEqualDomainSid(new SecurityIdentifier(domainSid)))
             subjects.AddClaim(new Claim(ClaimTypes.Role, "Student"));
-        else // // if user is not in domain then there is no user logged in on pc
+        else // if user is not in domain then there is no user logged in on pc
             subjects.AddClaim(new Claim(ClaimTypes.Role, "Guest"));
 
         var token = GenJwtToken(subjects);

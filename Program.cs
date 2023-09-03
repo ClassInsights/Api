@@ -1,6 +1,7 @@
 using Api;
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,15 @@ var mapperConfig = new MapperConfiguration(mc =>
 });
 
 builder.Services.AddSingleton(mapperConfig.CreateMapper());
+
+// Allow client certs
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ConfigureHttpsDefaults(options =>
+    {
+        options.ClientCertificateMode = ClientCertificateMode.AllowCertificate;
+    });
+});
 
 var app = builder.Build();
 
