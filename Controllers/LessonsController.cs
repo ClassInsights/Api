@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Api.Controllers;
 
+/// <inheritdoc />
 [Route("api/[controller]")]
 [ApiController]
 public class LessonsController : ControllerBase
@@ -12,12 +13,17 @@ public class LessonsController : ControllerBase
     private readonly ClassInsightsContext _context;
     private readonly IMapper _mapper;
 
+    /// <inheritdoc />
     public LessonsController(ClassInsightsContext context, IMapper mapper)
     {
         _context = context;
         _mapper = mapper;
     }
 
+    /// <summary>
+    ///     Find all available Lessons
+    /// </summary>
+    /// <returns><see cref="List{T}" /> whose generic type argument is <see cref="ApiModels.Lesson" /></returns>
     [HttpGet]
     public async Task<IActionResult> GetAllLessons()
     {
@@ -25,6 +31,11 @@ public class LessonsController : ControllerBase
         return Ok(_mapper.Map<List<ApiModels.Lesson>>(lessons));
     }
 
+    /// <summary>
+    ///     Replaces all Lessons with the new
+    /// </summary>
+    /// <param name="lessons">List of new lessons</param>
+    /// <returns></returns>
     [HttpPost]
     public async Task<IActionResult> AddLessons(List<ApiModels.Lesson> lessons)
     {

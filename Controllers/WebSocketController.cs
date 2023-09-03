@@ -5,11 +5,16 @@ using Newtonsoft.Json;
 
 namespace Api.Controllers;
 
+/// <inheritdoc />
 [ApiExplorerSettings(IgnoreApi = true)] // ignore in swagger
 public class WebSocketController : ControllerBase
 {
     private static readonly Dictionary<int, WebSocket> PcWebSockets = new();
 
+    /// <summary>
+    /// Returns power and usage information of Pc
+    /// </summary>
+    /// <param name="pc">Id of Pc</param>
     [Route("/ws")]
     public async Task GetApp(int pc)
     {
@@ -45,7 +50,9 @@ public class WebSocketController : ControllerBase
         await HandleCloseAsync(clientWebSocket);
     }
 
-    // todo: use IDs for PCs (in heartbeat and database)
+    /// <summary>
+    /// Send power and usage information of pc
+    /// </summary>
     [Route("/ws/pc")]
     public async Task GetPc()
     {
@@ -78,9 +85,10 @@ public class WebSocketController : ControllerBase
         while (webSocket.State != WebSocketState.Closed) await Task.Delay(10000); // keep websocket alive
     }
 
+
     private class Heartbeat
     {
-        public int ComputerId { get; set; }
+        public int ComputerId { get; }
         public string Type { get; set; } = null!;
         public string Name { get; set; } = null!;
         public int Room { get; set; }
@@ -88,7 +96,7 @@ public class WebSocketController : ControllerBase
         public Data? Data { get; set; }
     }
 
-    private class Data
+    internal class Data
     {
         public float Power { get; set; }
         public float RamUsage { get; set; }

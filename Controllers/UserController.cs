@@ -270,5 +270,10 @@ public class UserController : ControllerBase
         return Convert.ToBase64String(randomNumber);
     }
 
+    /// <summary>
+    /// Request model for Token refresh
+    /// </summary>
+    /// <param name="UserId">Id of user which is associated with RefreshToken</param>
+    /// <param name="RefreshToken">RefreshToken of User</param>
     public record TokenRequest(int UserId, string RefreshToken);
 }

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Api.Controllers;
 
+/// <inheritdoc />
 [Route("api/[controller]")]
 [ApiController]
 public class ComputersController : ControllerBase
@@ -12,6 +13,7 @@ public class ComputersController : ControllerBase
     private readonly ClassInsightsContext _context;
     private readonly IMapper _mapper;
 
+    /// <inheritdoc />
     public ComputersController(ClassInsightsContext context, IMapper mapper)
     {
         _context = context;
@@ -19,10 +21,12 @@ public class ComputersController : ControllerBase
     }
 
     /// <summary>
-    /// Is used to add or update an existing computer
+    ///     Adds or updates a Computer
     /// </summary>
-    /// <param name="computer">Updated Computer object</param>
-    /// <returns><seealso cref="ApiModels.Computer"/></returns>
+    /// <param name="computer">New computer</param>
+    /// <returns>
+    ///     <see cref="ApiModels.Computer" />
+    /// </returns>
     [HttpPost]
     public async Task<IActionResult> AddComputerTask(ApiModels.Computer computer)
     {
@@ -37,17 +41,22 @@ public class ComputersController : ControllerBase
             pc.IpAddress = computer.IpAddress;
             pc.LastUser = computer.LastUser;
         }
-        else await _context.TabComputers.AddAsync(_mapper.Map<TabComputer>(computer));
+        else
+        {
+            await _context.TabComputers.AddAsync(_mapper.Map<TabComputer>(computer));
+        }
 
         await _context.SaveChangesAsync();
         return Ok(_mapper.Map<ApiModels.Computer>(computer));
     }
 
     /// <summary>
-    /// Get information of Computer by Name
+    ///     Get information of Computer by Name
     /// </summary>
-    /// <param name="name">Name of computer</param>
-    /// <returns><see cref="TabComputer"/></returns>
+    /// <param name="name">Name of Computer</param>
+    /// <returns>
+    ///     <see cref="TabComputer" />
+    /// </returns>
     [HttpGet("{name}")]
     public async Task<IActionResult> GetComputer(string name)
     {
@@ -56,12 +65,17 @@ public class ComputersController : ControllerBase
         return NotFound();
     }
 
+    /// <summary>
+    ///     Testing endpoint
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [HttpDelete]
     public async Task<IActionResult> ShutdownComputer(int id)
     {
         //var user = WindowsIdentity.GetCurrent().User; // PGI\julian
-        //var claims = HttpContext.User.Claims;
-        //var a = HttpContext.User.Identity.Name;
+        var claims = HttpContext.User.Claims;
+        var a = HttpContext.User.Identity.Name;
 
         return Ok();
     }

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Api.Controllers;
 
+/// <inheritdoc />
 [Route("api/[controller]")]
 [ApiController]
 public class RoomsController : ControllerBase
@@ -12,12 +13,20 @@ public class RoomsController : ControllerBase
     private readonly ClassInsightsContext _context;
     private readonly IMapper _mapper;
 
+    /// <inheritdoc />
     public RoomsController(ClassInsightsContext context, IMapper mapper)
     {
         _context = context;
         _mapper = mapper;
     }
 
+    /// <summary>
+    ///     Find a Room by it's name
+    /// </summary>
+    /// <param name="roomName">Name of room</param>
+    /// <returns>
+    ///     <see cref="ApiModels.Room" />
+    /// </returns>
     [HttpGet("{roomName}")]
     public async Task<IActionResult> GetRoomByName(string roomName)
     {
@@ -25,6 +34,15 @@ public class RoomsController : ControllerBase
         return Ok(_mapper.Map<ApiModels.Room>(room));
     }
 
+    /// <summary>
+    ///     Find search type inside of room with specific id
+    /// </summary>
+    /// <param name="roomId">Id of room</param>
+    /// <param name="search">Search type, can be 'computers' or 'lessons'</param>
+    /// <returns>
+    ///     <see cref="List{T}" /> whose generic type argument is <see cref="ApiModels.Lesson" /> or
+    ///     <see cref="ApiModels.Computer" />
+    /// </returns>
     [HttpGet("{roomId:int}")]
     public async Task<IActionResult> GetComputersById(int roomId, string search = "computers")
     {
@@ -36,11 +54,16 @@ public class RoomsController : ControllerBase
         };
     }
 
+    /// <summary>
+    ///     Find all available rooms
+    /// </summary>
+    /// <returns><see cref="List{T}" /> whose generic type argument is <see cref="ApiModels.Room" /></returns>
     [HttpGet]
     public async Task<IActionResult> GetRooms()
     {
         var rooms = await _context.TabRooms.Include(tabRoom => tabRoom.TabComputers).ToListAsync();
-        var responseRooms = rooms.Select(room => new ApiModels.Room(room.RoomId, room.Name!, room.LongName!, room.TabComputers.Count)).ToList();
+        var responseRooms = rooms.Select(room =>
+            new ApiModels.Room(room.RoomId, room.Name!, room.LongName!, room.TabComputers.Count)).ToList();
         return Ok(responseRooms);
     }
 
