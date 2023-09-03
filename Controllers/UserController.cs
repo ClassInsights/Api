@@ -39,8 +39,8 @@ public class UserController : ControllerBase
     /// </summary>
     /// <param name="code">OAuth2 Microsoft Code Flow Code</param>
     /// <returns>Jwt Bearer Token</returns>
-    [AllowAnonymous]
     [HttpGet("login")]
+    [AllowAnonymous]
     public async Task<IActionResult> LoginByCode(string code)
     {
         // connect to graph api
@@ -101,6 +101,7 @@ public class UserController : ControllerBase
     /// </param>
     /// <returns>New Access and Refresh Tokens</returns>
     [HttpPost]
+    [AllowAnonymous]
     public async Task<IActionResult> RefreshTokens(TokenRequest request)
     {
         var user = await _context.TabUsers.FindAsync(request.UserId);
@@ -149,8 +150,8 @@ public class UserController : ControllerBase
     ///     Login Endpoint for Computers
     /// </summary>
     /// <returns>Jwt Bearer Token</returns>
-    [Authorize(AuthenticationSchemes = NegotiateDefaults.AuthenticationScheme)]
     [HttpGet("login/pc")]
+    [Authorize(AuthenticationSchemes = NegotiateDefaults.AuthenticationScheme)]
     public async Task<IActionResult> LoginByWinAuth()
     {
         if (HttpContext.User.Identity is not WindowsIdentity { IsAuthenticated: true } identity)
