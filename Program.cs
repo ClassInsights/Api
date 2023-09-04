@@ -43,6 +43,9 @@ var mapperConfig = new MapperConfiguration(mc =>
 
 builder.Services.AddSingleton(mapperConfig.CreateMapper());
 
+// Enable Memory Cache
+builder.Services.AddMemoryCache();
+
 // Allow client certs
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {

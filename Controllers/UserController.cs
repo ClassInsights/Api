@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Identity.Web;
@@ -26,12 +27,14 @@ public class UserController : ControllerBase
 {
     private readonly IConfiguration _config;
     private readonly ClassInsightsContext _context;
+    private readonly IMemoryCache _memoryCache;
 
     /// <inheritdoc />
-    public UserController(IConfiguration config, ClassInsightsContext context)
+    public UserController(IConfiguration config, ClassInsightsContext context, IMemoryCache memoryCache)
     {
         _config = config;
         _context = context;
+        _memoryCache = memoryCache;
     }
 
     /// <summary>
@@ -41,7 +44,7 @@ public class UserController : ControllerBase
     /// <returns>Jwt Bearer Token</returns>
     [HttpGet("login")]
     [AllowAnonymous]
-    public async Task<IActionResult> LoginByCode(string code)
+    public async Task<IActionResult> LoginByGraphCode(string code)
     {
         // connect to graph api
         var graphClient = new GraphServiceClient(
@@ -84,13 +87,36 @@ public class UserController : ControllerBase
         var subjects = await GetClaimsFromGraph(dbUser.UserId, me);
         var token = GenJwtToken(subjects);
 
+        var tokenCode = Guid.NewGuid().ToString("N");
+
+        // save tokens to memory and set expiration
+        _memoryCache.Set(tokenCode, new
+        {
+            access_token = token,
+            refresh_token = refreshToken
+        }, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2),
+            Priority = CacheItemPriority.NeverRemove
+        });
+
         return token is null
             ? Unauthorized()
-            : Ok(new
-            {
-                access_token = token,
-                refresh_token = refreshToken
-            });
+            : Redirect($"classinsights://success?code={tokenCode}");
+    }
+
+    /// <summary>
+    ///     Returns Access and Refresh Token by Code
+    /// </summary>
+    /// <param name="code">Code from OAuth2 Graph Login Endpoint</param>
+    /// <returns>Access and Refresh Token object</returns>
+    [HttpGet("login/{code}")]
+    [AllowAnonymous]
+    public Task<IActionResult> LoginByCode(string code)
+    {
+        return !_memoryCache.TryGetValue(code, out var tokens)
+            ? Task.FromResult<IActionResult>(NotFound())
+            : Task.FromResult<IActionResult>(Ok(tokens));
     }
 
     /// <summary>
@@ -121,7 +147,7 @@ public class UserController : ControllerBase
         // get user by principalName
         var graphUser = await graphClient.Users[user.Email].GetAsync(x =>
         {
-            x.QueryParameters.Expand = new []{ "memberof" };
+            x.QueryParameters.Expand = new[] { "memberof" };
             x.Options.WithAppOnly();
         });
 
@@ -130,7 +156,7 @@ public class UserController : ControllerBase
 
         // get new user claims
         var subjects = await GetClaimsFromGraph(user.UserId, graphUser);
-        
+
         var token = GenJwtToken(subjects);
         var refreshToken = GenerateRefreshToken();
 
@@ -233,9 +259,7 @@ public class UserController : ControllerBase
 
         // add head of class
         if (await _context.TabClasses.FirstOrDefaultAsync(x => x.AzureGroupId == classGroup.Id) is { } klasse)
-        {
             subjects.AddClaim(new Claim("head", klasse.Head));
-        }
 
         return subjects;
     }
@@ -271,7 +295,7 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
-    /// Request model for Token refresh
+    ///     Request model for Token refresh
     /// </summary>
     /// <param name="UserId">Id of user which is associated with RefreshToken</param>
     /// <param name="RefreshToken">RefreshToken of User</param>
