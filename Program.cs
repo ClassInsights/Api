@@ -27,19 +27,13 @@ authentication.AddJwtAuthentication(builder.Configuration);
 authentication.AddWinAuthentication();
 
 // generate lowercase URLs
-builder.Services.Configure<RouteOptions>(options =>
-{
-    options.LowercaseUrls = true;
-});
+builder.Services.Configure<RouteOptions>(options => { options.LowercaseUrls = true; });
 
 builder.Services.AddAuthorization();
 
 
 // Auto Mapper Configurations
-var mapperConfig = new MapperConfiguration(mc =>
-{
-    mc.AddProfile(new MappingProfile());
-});
+var mapperConfig = new MapperConfiguration(mc => { mc.AddProfile(new MappingProfile()); });
 
 builder.Services.AddSingleton(mapperConfig.CreateMapper());
 
@@ -58,10 +52,7 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline and Swagger
-app.UseSwagger(c =>
-{
-    c.RouteTemplate = "docs/{documentName}/docs.json";
-});
+app.UseSwagger(c => { c.RouteTemplate = "docs/{documentName}/docs.json"; });
 
 app.UseSwaggerUI(c =>
 {

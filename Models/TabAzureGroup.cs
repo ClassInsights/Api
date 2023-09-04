@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace Api.Models;
 
-namespace Api.Models;
-
-public partial class TabAzureGroup
+public class TabAzureGroup
 {
     public string GroupId { get; set; } = null!;
 

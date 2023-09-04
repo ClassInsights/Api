@@ -1,6 +1,6 @@
 ﻿namespace Api.Models;
 
-public partial class TabGroup
+public class TabGroup
 {
     public string GroupId { get; set; } = null!;
 

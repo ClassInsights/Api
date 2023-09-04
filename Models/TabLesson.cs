@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace Api.Models;
 
-namespace Api.Models;
-
-public partial class TabLesson
+public class TabLesson
 {
     public int LessonId { get; set; }
 

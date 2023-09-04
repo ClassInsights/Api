@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Net.WebSockets;
+﻿using System.Net.WebSockets;
 using System.Text;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
 namespace Api.Controllers;
@@ -12,7 +12,7 @@ public class WebSocketController : ControllerBase
     private static readonly Dictionary<int, WebSocket> PcWebSockets = new();
 
     /// <summary>
-    /// Returns power and usage information of Pc
+    ///     Returns power and usage information of Pc
     /// </summary>
     /// <param name="pc">Id of Pc</param>
     [Route("/ws")]
@@ -30,12 +30,11 @@ public class WebSocketController : ControllerBase
             HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
             return;
         }
-        
+
         using var clientWebSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
         // while connection is alive, read pc websockets and send result to client websocket
         while (!clientWebSocket.CloseStatus.HasValue)
-        {
             // skip if close handshake is performed
             if (pcWebSocket.State == WebSocketState.Open && await ReadTextAsync(pcWebSocket) is { } result)
             {
@@ -43,15 +42,17 @@ public class WebSocketController : ControllerBase
                 if (heartbeat != null)
                     await SendTextAsync(JsonConvert.SerializeObject(heartbeat), clientWebSocket);
             }
-            else await Task.Delay(500);
-        }
+            else
+            {
+                await Task.Delay(500);
+            }
 
         // close connection because client has disconnected
         await HandleCloseAsync(clientWebSocket);
     }
 
     /// <summary>
-    /// Send power and usage information of pc
+    ///     Send power and usage information of pc
     /// </summary>
     [Route("/ws/pc")]
     public async Task GetPc()
@@ -85,6 +86,45 @@ public class WebSocketController : ControllerBase
         while (webSocket.State != WebSocketState.Closed) await Task.Delay(10000); // keep websocket alive
     }
 
+    private static async Task SendTextAsync(string text, WebSocket webSocket)
+    {
+        var buffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(text));
+        await webSocket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+    }
+
+    private static async Task<string?> ReadTextAsync(WebSocket webSocket)
+    {
+        var buffer = new byte[8192];
+        var text = new StringBuilder();
+
+        WebSocketReceiveResult receiveResult;
+        do
+        {
+            receiveResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+            if (receiveResult.MessageType != WebSocketMessageType.Close)
+            {
+                text.Append(Encoding.UTF8.GetString(new ArraySegment<byte>(buffer, 0, receiveResult.Count)));
+            }
+            else
+            {
+                await HandleCloseAsync(webSocket);
+                return null; // return null if close
+            }
+        } while (!receiveResult.EndOfMessage);
+
+        return text.ToString();
+    }
+
+    private static async Task HandleCloseAsync(WebSocket webSocket)
+    {
+        if (webSocket.State == WebSocketState.CloseReceived)
+            await webSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, webSocket.CloseStatusDescription,
+                CancellationToken.None);
+        else
+            await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, webSocket.CloseStatusDescription,
+                CancellationToken.None);
+    }
+
 
     private class Heartbeat
     {
@@ -103,40 +143,5 @@ public class WebSocketController : ControllerBase
         public List<float>? CpuUsage { get; set; }
         public List<float>? DiskUsages { get; set; }
         public List<Dictionary<string, float>>? EthernetUsages { get; set; }
-    }
-
-    private static async Task SendTextAsync(string text, WebSocket webSocket)
-    {
-        var buffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(text));
-        await webSocket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
-    }
-
-    private static async Task<string?> ReadTextAsync(WebSocket webSocket)
-    {
-        var buffer = new byte[8192];
-        var text = new StringBuilder();
-
-        WebSocketReceiveResult receiveResult;
-        do
-        {
-            receiveResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-            if (receiveResult.MessageType != WebSocketMessageType.Close)
-                text.Append(Encoding.UTF8.GetString(new ArraySegment<byte>(buffer, 0, receiveResult.Count)));
-            else
-            {
-                await HandleCloseAsync(webSocket);
-                return null; // return null if close
-            }
-        } while (!receiveResult.EndOfMessage);
-
-        return text.ToString();
-    }
-
-    private static async Task HandleCloseAsync(WebSocket webSocket)
-    {
-        if (webSocket.State == WebSocketState.CloseReceived)
-            await webSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, webSocket.CloseStatusDescription, CancellationToken.None);
-        else
-            await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, webSocket.CloseStatusDescription, CancellationToken.None);
     }
 }

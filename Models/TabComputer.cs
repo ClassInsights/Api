@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace Api.Models;
 
-namespace Api.Models;
-
-public partial class TabComputer
+public class TabComputer
 {
     public int ComputerId { get; set; }
 

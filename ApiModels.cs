@@ -1,12 +1,12 @@
 ﻿namespace Api;
 
 /// <summary>
-/// DTO Models for Api requests and responses
+///     DTO Models for Api requests and responses
 /// </summary>
 public class ApiModels
 {
     /// <summary>
-    /// Class object
+    ///     Class object
     /// </summary>
     /// <param name="ClassId">Id of Class</param>
     /// <param name="Name">Name of Class</param>
@@ -15,7 +15,7 @@ public class ApiModels
     public record Class(int ClassId, string Name, string Head, string? AzureGroupId);
 
     /// <summary>
-    /// Lesson object
+    ///     Lesson object
     /// </summary>
     /// <param name="LessonId">Id of Lesson</param>
     /// <param name="RoomId">Id of Room</param>
@@ -26,7 +26,7 @@ public class ApiModels
     public record Lesson(int LessonId, int RoomId, int SubjectId, int ClassId, DateTime? StartTime, DateTime? EndTime);
 
     /// <summary>
-    /// Computer object
+    ///     Computer object
     /// </summary>
     /// <param name="ComputerId">Id of Computer</param>
     /// <param name="RoomId">Id of Room</param>
@@ -35,10 +35,11 @@ public class ApiModels
     /// <param name="IpAddress">IP Address of Computer</param>
     /// <param name="LastUser">Last signed in User</param>
     /// <param name="LastSeen">Last time of Heartbeat</param>
-    public record Computer(int ComputerId, int RoomId, string Name, string MacAddress, string IpAddress, string? LastUser, DateTime LastSeen);
+    public record Computer(int ComputerId, int RoomId, string Name, string MacAddress, string IpAddress,
+        string? LastUser, DateTime LastSeen);
 
     /// <summary>
-    /// Room object
+    ///     Room object
     /// </summary>
     /// <param name="RoomId">Id of Room</param>
     /// <param name="Name">Name of Room</param>
