@@ -64,6 +64,7 @@ public class ComputersController : ControllerBase
     /// <param name="pcId">Id of Pc</param>
     /// <returns></returns>
     [HttpDelete("{pcId:int}")]
+    [Authorize(Roles = "Teacher")]
     public async Task<IActionResult> ShutdownComputer(int pcId)
     {
         if (!WebSocketController.PcWebSockets.TryGetValue(pcId, out var pcWebsocket))
