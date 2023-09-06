@@ -32,22 +32,12 @@ public class ComputersController : ControllerBase
     {
         if (HttpContext.User.Identity?.Name is { } name) computer = computer with { LastUser = name };
 
-        if (await _context.TabComputers.FindAsync(computer.ComputerId) is { } pc)
-        {
-            pc.Name = computer.Name;
-            pc.MacAddress = computer.MacAddress;
-            pc.LastSeen = computer.LastSeen;
-            pc.RoomId = computer.RoomId;
-            pc.IpAddress = computer.IpAddress;
-            pc.LastUser = computer.LastUser;
-        }
-        else
-        {
-            await _context.TabComputers.AddAsync(_mapper.Map<TabComputer>(computer));
-        }
-
+        var tabComputer = _mapper.Map<TabComputer>(computer);
+        _context.Update(tabComputer);
         await _context.SaveChangesAsync();
-        return Ok(_mapper.Map<ApiModels.Computer>(computer));
+        
+        // map tabComputer to receive new ComputerId if it was created
+        return Ok(_mapper.Map<ApiModels.Computer>(tabComputer));
     }
 
     /// <summary>
