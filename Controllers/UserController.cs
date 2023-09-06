@@ -21,7 +21,7 @@ using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegiste
 namespace Api.Controllers;
 
 /// <inheritdoc />
-[Route("api/[controller]")]
+[Route("api/")]
 [ApiController]
 public class UserController : ControllerBase
 {
@@ -126,7 +126,7 @@ public class UserController : ControllerBase
     ///     <see cref="TokenRequest" />
     /// </param>
     /// <returns>New Access and Refresh Tokens</returns>
-    [HttpPost]
+    [HttpPost("token")]
     [AllowAnonymous]
     public async Task<IActionResult> RefreshTokens(TokenRequest request)
     {
@@ -218,7 +218,7 @@ public class UserController : ControllerBase
         });
 
         if (graphUser.MemberOf is not { } groups)
-            return new ClaimsIdentity();
+            return subjects;
 
         // check if user is tenant admin
         if (groups.OfType<DirectoryRole>().ToList() is { } roles &&
