@@ -9,7 +9,10 @@ namespace Api.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)] // ignore in swagger
 public class WebSocketController : ControllerBase
 {
-    private static readonly Dictionary<int, WebSocket> PcWebSockets = new();
+    /// <summary>
+    /// Dictionary of all connected PcWebSockets
+    /// </summary>
+    public static readonly Dictionary<int, WebSocket> PcWebSockets = new();
 
     /// <summary>
     ///     Returns power and usage information of Pc
@@ -128,7 +131,7 @@ public class WebSocketController : ControllerBase
 
     private class Heartbeat
     {
-        public int ComputerId { get; }
+        public int ComputerId { get; set; }
         public string Type { get; set; } = null!;
         public string Name { get; set; } = null!;
         public int Room { get; set; }

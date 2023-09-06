@@ -1,4 +1,5 @@
-﻿using Api.Models;
+﻿using System.Net.WebSockets;
+using Api.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -56,17 +57,22 @@ public class ComputersController : ControllerBase
     }
 
     /// <summary>
-    ///     Testing endpoint
+    ///     Force PC Shutdown
     /// </summary>
-    /// <param name="id"></param>
+    /// <param name="pcId">Id of Pc</param>
     /// <returns></returns>
-    [HttpDelete]
-    public async Task<IActionResult> ShutdownComputer(int id)
+    [HttpDelete("{pcId:int}")]
+    public async Task<IActionResult> ShutdownComputer(int pcId)
     {
-        //var user = WindowsIdentity.GetCurrent().User; // PGI\julian
-        var claims = HttpContext.User.Claims;
-        var a = HttpContext.User.Identity.Name;
+        if (!WebSocketController.PcWebSockets.TryGetValue(pcId, out var pcWebsocket))
+            return NotFound();
 
+        // check if websocket is still alive
+        if (pcWebsocket.State != WebSocketState.Open)
+            return NotFound();
+
+        // send shutdown
+        await pcWebsocket.SendAsync("shutdown"u8.ToArray(), WebSocketMessageType.Text, true, CancellationToken.None);
         return Ok();
     }
 }
