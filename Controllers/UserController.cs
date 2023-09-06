@@ -203,7 +203,9 @@ public class UserController : ControllerBase
             subjects.AddClaim(new Claim(ClaimTypes.Role, "Student"));
         else // if user is not in domain then there is no user logged in on pc
             subjects.AddClaim(new Claim(ClaimTypes.Role, "Guest"));
-
+        
+        subjects.AddClaim(new Claim(ClaimTypes.Role, "Computer"));
+        
         var token = GenJwtToken(subjects);
         return token is null ? Unauthorized() : Ok(token);
     }

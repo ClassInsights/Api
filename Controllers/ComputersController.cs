@@ -1,6 +1,7 @@
 ﻿using System.Net.WebSockets;
 using Api.Models;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,6 +30,7 @@ public class ComputersController : ControllerBase
     ///     <see cref="ApiModels.Computer" />
     /// </returns>
     [HttpPost]
+    [Authorize(Roles = "Computer")]
     public async Task<IActionResult> AddComputerTask(ApiModels.Computer computer)
     {
         if (HttpContext.User.Identity?.Name is { } name) computer = computer with { LastUser = name };
