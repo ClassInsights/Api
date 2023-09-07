@@ -61,10 +61,10 @@ public class RoomsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetRooms()
     {
-        var rooms = await _context.TabRooms.Include(tabRoom => tabRoom.TabComputers).ToListAsync();
-        var responseRooms = rooms.Select(room =>
-            new ApiModels.Room(room.RoomId, room.Name!, room.LongName!, room.TabComputers.Count)).ToList();
-        return Ok(responseRooms);
+        var rooms = await _context.TabRooms.Include(tabRoom => tabRoom.TabComputers)
+            .Where(tabRoom => tabRoom.TabComputers.Count > 0).Select(room =>
+                new ApiModels.Room(room.RoomId, room.Name!, room.LongName!, room.TabComputers.Count)).ToListAsync();
+        return Ok(rooms);
     }
 
     private async Task<IActionResult> GetComputers(int roomId)
