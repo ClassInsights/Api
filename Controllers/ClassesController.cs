@@ -36,19 +36,30 @@ public class ClassesController : ControllerBase
     }
 
     /// <summary>
-    ///     Get information from Class
+    ///     Find Class by Id
     /// </summary>
     /// <param name="classId">Id of specific class</param>
-    /// <param name="search">Type of which information should be returned</param>
+    /// <returns>
+    ///     <see cref="ApiModels.Class" />
+    /// </returns>
+    [HttpGet("{classId:int}")]
+    public async Task<IActionResult> GetClassById(int classId)
+    {
+        if (await _context.TabClasses.FindAsync(classId) is not { } klasse)
+            return NotFound();
+        return Ok(_mapper.Map<ApiModels.Class>(klasse));
+    }
+
+    /// <summary>
+    ///     Find current Lesson of Class by Id
+    /// </summary>
+    /// <param name="classId">Id of specific class</param>
     /// <returns>
     ///     <see cref="ApiModels.Lesson" />
     /// </returns>
-    [HttpGet("{classId:int}")]
-    public async Task<IActionResult> GetClassInformation(int classId, string search = "currentLesson")
+    [HttpGet("{classId:int}/currentLesson")]
+    public async Task<IActionResult> GetCurrentLesson(int classId)
     {
-        if (search != "currentLesson")
-            return BadRequest();
-
         // receive all lessons of class
         var lessons = await _context.TabLessons.Where(x => x.ClassId == classId).ToListAsync();
 
