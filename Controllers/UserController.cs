@@ -27,11 +27,12 @@ public class UserController : ControllerBase
 {
     private readonly IConfiguration _config;
     private readonly ClassInsightsContext _context;
-    private readonly IMemoryCache _memoryCache;
     private readonly GraphServiceClient _graphClient;
+    private readonly IMemoryCache _memoryCache;
 
     /// <inheritdoc />
-    public UserController(IConfiguration config, ClassInsightsContext context, IMemoryCache memoryCache, GraphServiceClient graphClient)
+    public UserController(IConfiguration config, ClassInsightsContext context, IMemoryCache memoryCache,
+        GraphServiceClient graphClient)
     {
         _config = config;
         _context = context;
@@ -137,7 +138,7 @@ public class UserController : ControllerBase
         // validate user RefreshToken
         if (user?.Email == null || request.RefreshToken != user.RefreshToken)
             return Unauthorized();
-        
+
         // get user by principalName
         var graphUser = await _graphClient.Users[user.Email].GetAsync(x =>
         {
@@ -165,6 +166,28 @@ public class UserController : ControllerBase
             access_token = token,
             refresh_token = refreshToken
         });
+    }
+
+    /// <summary>
+    ///     Revokes the RefreshToken of the User
+    /// </summary>
+    /// <param name="request">
+    ///     <see cref="TokenRequest" />
+    /// </param>
+    /// <returns></returns>
+    [HttpDelete("token")]
+    public async Task<IActionResult> LogoutUser(TokenRequest request)
+    {
+        var user = await _context.TabUsers.FindAsync(request.UserId);
+
+        // validate user RefreshToken
+        if (user == null || request.RefreshToken != user.RefreshToken)
+            return Unauthorized();
+
+        _context.Remove(user);
+        await _context.SaveChangesAsync();
+
+        return Ok();
     }
 
     /// <summary>
@@ -198,9 +221,9 @@ public class UserController : ControllerBase
             subjects.AddClaim(new Claim(ClaimTypes.Role, "Student"));
         else // if user is not in domain then there is no user logged in on pc
             subjects.AddClaim(new Claim(ClaimTypes.Role, "Guest"));
-        
+
         subjects.AddClaim(new Claim(ClaimTypes.Role, "Computer"));
-        
+
         var token = GenJwtToken(subjects);
         return token is null ? Unauthorized() : Ok(token);
     }
