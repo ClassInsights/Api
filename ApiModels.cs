@@ -46,4 +46,12 @@ public class ApiModels
     /// <param name="LongName">Fullname of Room</param>
     /// <param name="DeviceCount">Count of Computers inside of Room</param>
     public record Room(int RoomId, string Name, string LongName, int? DeviceCount);
+
+    /// <summary>
+    ///     Subject object
+    /// </summary>
+    /// <param name="SubjectId">Id of Subject</param>
+    /// <param name="Name">Name of Subject</param>
+    /// <param name="LongName">Fullname of Subject</param>
+    public record Subject(int SubjectId, string Name, string LongName);
 }
