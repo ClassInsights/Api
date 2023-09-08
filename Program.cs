@@ -2,6 +2,7 @@ using Api;
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
+using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +32,12 @@ builder.Services.Configure<RouteOptions>(options => { options.LowercaseUrls = tr
 
 builder.Services.AddAuthorization();
 
+// Add Microsoft Graph
+builder.Services.AddAuthentication()
+    .AddMicrosoftIdentityWebApp(builder.Configuration)
+    .EnableTokenAcquisitionToCallDownstreamApi()
+    .AddMicrosoftGraph()
+    .AddInMemoryTokenCaches();
 
 // Auto Mapper Configurations
 var mapperConfig = new MapperConfiguration(mc => { mc.AddProfile(new MappingProfile()); });

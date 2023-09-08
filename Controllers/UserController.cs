@@ -28,13 +28,15 @@ public class UserController : ControllerBase
     private readonly IConfiguration _config;
     private readonly ClassInsightsContext _context;
     private readonly IMemoryCache _memoryCache;
+    private readonly GraphServiceClient _graphClient;
 
     /// <inheritdoc />
-    public UserController(IConfiguration config, ClassInsightsContext context, IMemoryCache memoryCache)
+    public UserController(IConfiguration config, ClassInsightsContext context, IMemoryCache memoryCache, GraphServiceClient graphClient)
     {
         _config = config;
         _context = context;
         _memoryCache = memoryCache;
+        _graphClient = graphClient;
     }
 
     /// <summary>
@@ -135,20 +137,13 @@ public class UserController : ControllerBase
         // validate user RefreshToken
         if (user?.Email == null || request.RefreshToken != user.RefreshToken)
             return Unauthorized();
-
-        var graphClient = new GraphServiceClient(new ClientSecretCredential(_config["AzureAd:TenantId"],
-            _config["AzureAd:ClientId"],
-            _config.GetSection("AzureAd:ClientCredentials").GetChildren().First()["ClientSecret"],
-            new ClientSecretCredentialOptions
-            {
-                AuthorityHost = AzureAuthorityHosts.AzurePublicCloud
-            }));
-
+        
         // get user by principalName
-        var graphUser = await graphClient.Users[user.Email].GetAsync(x =>
+        var graphUser = await _graphClient.Users[user.Email].GetAsync(x =>
         {
             x.QueryParameters.Expand = new[] { "memberof" };
             x.Options.WithAppOnly();
+            x.Options.WithAuthenticationScheme("OpenIdConnect");
         });
 
         if (graphUser == null)
