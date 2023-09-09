@@ -277,12 +277,9 @@ public class UserController : ControllerBase
         // substring from char 5 must be school type, e.g. KK
         // subjects.AddClaim(new Claim("class", $"{grade}{classGroup.DisplayName?[5..]}"));
 
-        // add head of class
+        // add id of class
         if (await _context.TabClasses.FirstOrDefaultAsync(x => x.AzureGroupId == classGroup.Id) is { } klasse)
-        {
-            subjects.AddClaim(new Claim("head", klasse.Head));
             subjects.AddClaim(new Claim("class", klasse.ClassId.ToString()));
-        }
 
         return subjects;
     }
