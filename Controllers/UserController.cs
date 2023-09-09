@@ -218,7 +218,12 @@ public class UserController : ControllerBase
 
         if (identity.User != null && _config["DomainSid"] is { } domainSid &&
             identity.User.IsEqualDomainSid(new SecurityIdentifier(domainSid)))
-            subjects.AddClaim(new Claim(ClaimTypes.Role, "Student"));
+        {
+            var principal = new WindowsPrincipal(identity);
+            subjects.AddClaim(principal.IsInRole(new SecurityIdentifier(WellKnownSidType.AccountDomainAdminsSid, new SecurityIdentifier(domainSid)))
+                ? new Claim(ClaimTypes.Role, "Admin")
+                : new Claim(ClaimTypes.Role, "Student"));
+        }
         else // if user is not in domain then there is no user logged in on pc
             subjects.AddClaim(new Claim(ClaimTypes.Role, "Guest"));
 
