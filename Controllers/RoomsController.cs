@@ -35,23 +35,31 @@ public class RoomsController : ControllerBase
     }
 
     /// <summary>
-    ///     Find search type inside of room with specific id
+    ///     Find all Computers in a Room
     /// </summary>
     /// <param name="roomId">Id of room</param>
-    /// <param name="search">Search type, can be 'computers' or 'lessons'</param>
     /// <returns>
-    ///     <see cref="List{T}" /> whose generic type argument is <see cref="ApiModels.Lesson" /> or
     ///     <see cref="ApiModels.Computer" />
     /// </returns>
-    [HttpGet("{roomId:int}")]
-    public async Task<IActionResult> GetComputersById(int roomId, string search = "computers")
+    [HttpGet("{roomId:int}/computers")]
+    public async Task<IActionResult> GetComputersInRoom(int roomId)
     {
-        return search switch
-        {
-            "computers" => await GetComputers(roomId),
-            "lessons" => await GetLessons(roomId),
-            _ => BadRequest()
-        };
+        var computers = await _context.TabComputers.Where(x => x.RoomId == roomId).ToListAsync();
+        return Ok(_mapper.Map<List<ApiModels.Computer>>(computers));
+    }
+
+    /// <summary>
+    ///     Find all Lessons in a Room
+    /// </summary>
+    /// <param name="roomId">Id of room</param>
+    /// <returns><see cref="List{T}" /> whose generic type argument is <see cref="ApiModels.Lesson" /></returns>
+    [HttpGet("{roomId:int}/lessons")]
+    public async Task<IActionResult> GetLessonsInRoom(int roomId)
+    {
+        var todayLessons = await _context.TabLessons
+            .Where(x => x.RoomId == roomId && x.StartTime.HasValue && x.StartTime.Value.Date == DateTime.Today)
+            .ToListAsync();
+        return Ok(_mapper.Map<List<ApiModels.Lesson>>(todayLessons));
     }
 
     /// <summary>
@@ -65,18 +73,5 @@ public class RoomsController : ControllerBase
             .Where(tabRoom => tabRoom.TabComputers.Count > 0).Select(room =>
                 new ApiModels.Room(room.RoomId, room.Name!, room.LongName!, room.TabComputers.Count)).ToListAsync();
         return Ok(rooms);
-    }
-
-    private async Task<IActionResult> GetComputers(int roomId)
-    {
-        var computers = await _context.TabComputers.Where(x => x.RoomId == roomId).ToListAsync();
-        return Ok(_mapper.Map<List<ApiModels.Computer>>(computers));
-    }
-
-    private async Task<IActionResult> GetLessons(int roomId)
-    {
-        var lessons = await _context.TabLessons.Where(x => x.RoomId == roomId).ToListAsync();
-        var todayLessons = lessons.Where(x => x.StartTime?.DayOfWeek == DateTime.Now.DayOfWeek).ToList();
-        return Ok(_mapper.Map<List<ApiModels.Lesson>>(todayLessons));
     }
 }
