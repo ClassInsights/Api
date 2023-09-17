@@ -205,7 +205,7 @@ public class UserController : ControllerBase
             { } clientCertificate /* || !clientCertificate.Verify()*/)
             return BadRequest();
 
-        if (clientCertificate.Thumbprint != _config["CertificateThumbprint"]?.ToUpper())
+        if (clientCertificate.Thumbprint != _config["Dashboard:CertificateThumbprint"]?.ToUpper())
             return Unauthorized("Invalid certificate");
 
         var subjects = new ClaimsIdentity(new[]
@@ -216,7 +216,7 @@ public class UserController : ControllerBase
         if (identity.User?.Value is { } sid)
             subjects.AddClaim(new Claim(JwtRegisteredClaimNames.Sub, sid));
 
-        if (identity.User != null && _config["DomainSid"] is { } domainSid &&
+        if (identity.User != null && _config["Dashboard:DomainSid"] is { } domainSid &&
             identity.User.IsEqualDomainSid(new SecurityIdentifier(domainSid)))
         {
             var principal = new WindowsPrincipal(identity);
@@ -254,7 +254,7 @@ public class UserController : ControllerBase
         }
 
         // check if user is a teacher
-        if (groups.Any(group => group.Id == _config["TeacherGroup"]))
+        if (groups.Any(group => group.Id == _config["Dashboard:TeacherGroup"]))
         {
             subjects.AddClaim(new Claim(ClaimTypes.Role, "Teacher"));
             return subjects;
