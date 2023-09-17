@@ -1,5 +1,7 @@
+using Api.Attributes;
 using Api.Models;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -43,5 +45,29 @@ public class SubjectsController : ControllerBase
         if (await _context.TabSubjects.FindAsync(subjectId) is not { } subject)
             return NotFound();
         return Ok(_mapper.Map<ApiModels.Subject>(subject));
+    }
+
+    /// <summary>
+    ///     Adds or deletes subjects
+    /// </summary>
+    /// <param name="subjects">List of all Subjects</param>
+    /// <returns></returns>
+    [HttpPost]
+    [AllowAnonymous]
+    [IsLocal]
+    public async Task<IActionResult> AddOrDeleteSubjects(List<ApiModels.Subject> subjects)
+    {
+        var dbSubjects = await _context.TabSubjects.ToListAsync();
+        var newSubjects = subjects
+            .Where(subject => dbSubjects.All(dbSubject => subject.SubjectId != dbSubject.SubjectId)).ToList();
+
+        var oldSubjects = dbSubjects
+            .Where(dbSubject => subjects.All(subject => dbSubject.SubjectId != subject.SubjectId)).ToList();
+
+        _context.TabSubjects.AddRange(_mapper.Map<List<TabSubject>>(newSubjects));
+        _context.TabSubjects.RemoveRange(oldSubjects);
+
+        await _context.SaveChangesAsync();
+        return Ok();
     }
 }
