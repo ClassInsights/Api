@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using Api;
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -56,10 +57,27 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
     });
 });
 
+// Configure Rate Limits
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("defaultUserRateLimit", context => RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey: context.Request.Headers.Authorization.FirstOrDefault() ?? context.Request.Headers.Host.ToString(),
+        factory: _ => new FixedWindowRateLimiterOptions
+        {
+            AutoReplenishment = true,
+            PermitLimit = 60,
+            QueueLimit = 0,
+            Window = TimeSpan.FromMinutes(3)
+        }));
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline and Swagger
 app.UseSwagger(c => { c.RouteTemplate = "docs/{documentName}/docs.json"; });
+
+app.UseRateLimiter();
 
 app.UseSwaggerUI(c =>
 {
@@ -79,6 +97,6 @@ app.UseAuthorization();
 
 app.UseWebSockets();
 
-app.MapControllers().RequireAuthorization();
+app.MapControllers().RequireAuthorization().RequireRateLimiting("defaultUserRateLimit");
 
 app.Run();
