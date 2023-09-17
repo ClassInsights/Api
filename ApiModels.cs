@@ -54,4 +54,32 @@ public class ApiModels
     /// <param name="Name">Name of Subject</param>
     /// <param name="LongName">Fullname of Subject</param>
     public record Subject(int SubjectId, string Name, string LongName);
+
+    /// <summary>
+    ///     SchoolYear object
+    /// </summary>
+    public class SchoolYear
+    {
+        /// <summary>
+        ///     SchoolYear object
+        /// </summary>
+        /// <param name="name">Name of SchoolYear</param>
+        /// <param name="startDate">StartDate of SchoolYear</param>
+        /// <param name="endDate">EndDate of SchoolYear</param>
+        public SchoolYear(string name, DateTime startDate, DateTime endDate)
+        {
+            Name = name;
+            StartDate = startDate;
+            EndDate = endDate;
+        }
+
+        /// <summary>Name of SchoolYear</summary>
+        public string Name { get; set; }
+
+        /// <summary>StartDate of SchoolYear</summary>
+        public DateTime StartDate { get; set; }
+
+        /// <summary>EndDate of SchoolYear</summary>
+        public DateTime EndDate { get; set; }
+    }
 }
