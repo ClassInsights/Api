@@ -1,7 +1,11 @@
-﻿using Api.Models;
+﻿using Api.Attributes;
+using Api.Models;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Graph;
+using Microsoft.Identity.Web;
 
 namespace Api.Controllers;
 
@@ -10,13 +14,18 @@ namespace Api.Controllers;
 [ApiController]
 public class ClassesController : ControllerBase
 {
+    private readonly IConfiguration _config;
     private readonly ClassInsightsContext _context;
+    private readonly GraphServiceClient _graphClient;
     private readonly IMapper _mapper;
 
     /// <inheritdoc />
-    public ClassesController(ClassInsightsContext context, IMapper mapper)
+    public ClassesController(ClassInsightsContext context, GraphServiceClient graphClient, IConfiguration config,
+        IMapper mapper)
     {
         _context = context;
+        _graphClient = graphClient;
+        _config = config;
         _mapper = mapper;
     }
 
@@ -75,45 +84,46 @@ public class ClassesController : ControllerBase
     }
 
     /// <summary>
-    ///     Adds or updates Classes and deletes old ones
+    ///     Adds new Classes and deletes old
     /// </summary>
-    /// <param name="classes">List of all classes</param>
+    /// <param name="classes">List of all Classes</param>
     /// <returns></returns>
     [HttpPost]
     [IsLocal]
     [AllowAnonymous]
-    public async Task<IActionResult> AddOrUpdateClasses(List<ApiModels.Class> classes)
+    public async Task<IActionResult> AddOrDeleteClasses(List<ApiModels.Class> classes)
     {
-        if (!classes.Any()) return Ok();
-
-        // add or update classes
-        foreach (var klasse in classes)
-            if (await _context.TabClasses.FindAsync(klasse.ClassId) is { } dbClass)
-            {
-                dbClass.Name = klasse.Name;
-                dbClass.Head = klasse.Head;
-                if (klasse.AzureGroupId is not null)
-                {
-                    if (await _context.TabAzureGroups.FindAsync(klasse.AzureGroupId) is null)
-                        return NotFound($"{klasse.AzureGroupId} does not exist!");
-                    dbClass.AzureGroupId = klasse.AzureGroupId;
-                }
-
-                _context.TabClasses.Update(dbClass);
-            }
-            else
-            {
-                if (klasse.AzureGroupId is null)
-                {
-                    // todo: microsoft api get group id
-                }
-
-                _context.TabClasses.Add(_mapper.Map<TabClass>(klasse));
-            }
-
-        // delete old classes
+        // retrieve all classes from db
         var dbClasses = await _context.TabClasses.ToListAsync();
-        var oldClasses = dbClasses.Where(dbClass => classes.All(c => c.ClassId != dbClass.ClassId)).ToList();
+
+        // add new classes
+        foreach (var klasse in classes.Where(klasse => dbClasses.All(dbClass => dbClass.ClassId != klasse.ClassId)))
+        {
+            // build azure group name
+            var grade = int.Parse(klasse.Name[..1]);
+
+            var startDate = DateTime.Parse(_config["Dashboard:SchoolYear:StartDate"]!);
+            var startYear = startDate.Year - grade + 1;
+            var type = klasse.Name[1..];
+
+            var groupName = _config["Dashboard:AzureGroupPattern"]?.Replace("YEAR", startYear.ToString())
+                .Replace("CLASS", type);
+            var groups = await _graphClient.Groups.GetAsync(configuration =>
+            {
+                configuration.QueryParameters.Filter = $"displayName eq '{groupName}'";
+                configuration.Options.WithAppOnly();
+                configuration.Options.WithAuthenticationScheme("OpenIdConnect");
+            });
+
+            // set azureId
+            _context.TabClasses.Add(_mapper.Map<TabClass>(klasse with
+            {
+                AzureGroupId = groups?.Value?.FirstOrDefault()?.Id
+            }));
+        }
+
+        // delete old classes from db
+        var oldClasses = dbClasses.Where(dbClass => classes.All(klasse => klasse.ClassId != dbClass.ClassId)).ToList();
         if (oldClasses.Any())
             _context.RemoveRange(oldClasses);
 
