@@ -80,6 +80,8 @@ public class ClassesController : ControllerBase
     /// <param name="classes">List of all classes</param>
     /// <returns></returns>
     [HttpPost]
+    [IsLocal]
+    [AllowAnonymous]
     public async Task<IActionResult> AddOrUpdateClasses(List<ApiModels.Class> classes)
     {
         if (!classes.Any()) return Ok();
