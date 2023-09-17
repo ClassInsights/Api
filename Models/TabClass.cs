@@ -1,6 +1,9 @@
-﻿namespace Api.Models;
+﻿using System;
+using System.Collections.Generic;
 
-public class TabClass
+namespace Api.Models;
+
+public partial class TabClass
 {
     public int ClassId { get; set; }
 
@@ -10,9 +13,5 @@ public class TabClass
 
     public string? AzureGroupId { get; set; }
 
-    public virtual TabAzureGroup? AzureGroup { get; set; }
-
     public virtual ICollection<TabLesson> TabLessons { get; set; } = new List<TabLesson>();
-
-    public virtual ICollection<TabUser> TabUsers { get; set; } = new List<TabUser>();
 }

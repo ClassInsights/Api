@@ -1,6 +1,9 @@
-﻿namespace Api.Models;
+﻿using System;
+using System.Collections.Generic;
 
-public class TabRoom
+namespace Api.Models;
+
+public partial class TabRoom
 {
     public int RoomId { get; set; }
 

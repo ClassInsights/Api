@@ -1,19 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Models;
 
 public partial class ClassInsightsContext : DbContext
 {
-    public ClassInsightsContext()
-    {
-    }
-
     public ClassInsightsContext(DbContextOptions<ClassInsightsContext> options)
         : base(options)
     {
     }
-
-    public virtual DbSet<TabAzureGroup> TabAzureGroups { get; set; }
 
     public virtual DbSet<TabClass> TabClasses { get; set; }
 
@@ -29,17 +25,7 @@ public partial class ClassInsightsContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<TabAzureGroup>(entity =>
-        {
-            entity.HasKey(e => e.GroupId).HasName("PK_tabClasses");
-
-            entity.ToTable("tabAzureGroup");
-
-            entity.Property(e => e.GroupId)
-                .HasMaxLength(50)
-                .HasColumnName("GroupID");
-            entity.Property(e => e.Name).HasMaxLength(50);
-        });
+        modelBuilder.UseCollation("Latin1_General_CI_AS");
 
         modelBuilder.Entity<TabClass>(entity =>
         {
@@ -55,11 +41,6 @@ public partial class ClassInsightsContext : DbContext
                 .HasColumnName("AzureGroupID");
             entity.Property(e => e.Head).HasMaxLength(20);
             entity.Property(e => e.Name).HasMaxLength(20);
-
-            entity.HasOne(d => d.AzureGroup).WithMany(p => p.TabClasses)
-                .HasForeignKey(d => d.AzureGroupId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_tabClasses_tabGroups");
         });
 
         modelBuilder.Entity<TabComputer>(entity =>
@@ -143,17 +124,11 @@ public partial class ClassInsightsContext : DbContext
             entity.Property(e => e.AzureUserId)
                 .HasMaxLength(75)
                 .HasColumnName("AzureUserID");
-            entity.Property(e => e.ClassId).HasColumnName("ClassID");
             entity.Property(e => e.Email).HasMaxLength(100);
             entity.Property(e => e.FirstName).HasMaxLength(100);
             entity.Property(e => e.LastName).HasMaxLength(100);
             entity.Property(e => e.LastSeen).HasColumnType("datetime");
             entity.Property(e => e.RefreshToken).HasMaxLength(200);
-
-            entity.HasOne(d => d.Class).WithMany(p => p.TabUsers)
-                .HasForeignKey(d => d.ClassId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_tabUsers_tabClasses");
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -1,6 +1,9 @@
-﻿namespace Api.Models;
+﻿using System;
+using System.Collections.Generic;
 
-public class TabSubject
+namespace Api.Models;
+
+public partial class TabSubject
 {
     public int SubjectId { get; set; }
 

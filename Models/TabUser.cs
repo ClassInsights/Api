@@ -1,12 +1,13 @@
-﻿namespace Api.Models;
+﻿using System;
+using System.Collections.Generic;
 
-public class TabUser
+namespace Api.Models;
+
+public partial class TabUser
 {
     public int UserId { get; set; }
 
     public string? AzureUserId { get; set; }
-
-    public int? ClassId { get; set; }
 
     public string FirstName { get; set; } = null!;
 
@@ -17,6 +18,4 @@ public class TabUser
     public string? RefreshToken { get; set; }
 
     public DateTime? LastSeen { get; set; }
-
-    public virtual TabClass? Class { get; set; }
 }
