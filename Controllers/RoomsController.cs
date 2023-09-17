@@ -1,5 +1,7 @@
-﻿using Api.Models;
+﻿using Api.Attributes;
+using Api.Models;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -73,5 +75,29 @@ public class RoomsController : ControllerBase
             .Where(tabRoom => tabRoom.TabComputers.Count > 0).Select(room =>
                 new ApiModels.Room(room.RoomId, room.Name!, room.LongName!, room.TabComputers.Count)).ToListAsync();
         return Ok(rooms);
+    }
+
+    /// <summary>
+    ///     Adds or deletes Rooms
+    /// </summary>
+    /// <param name="rooms">List of Rooms</param>
+    /// <returns></returns>
+    [HttpPost]
+    [AllowAnonymous]
+    [IsLocal]
+    public async Task<IActionResult> AddOrDeleteRooms(List<ApiModels.Room> rooms)
+    {
+        var dbRooms = await _context.TabRooms.ToListAsync();
+        var newRooms = rooms
+            .Where(room => dbRooms.All(dbRoom => room.RoomId != dbRoom.RoomId)).ToList();
+
+        var oldRooms = dbRooms
+            .Where(dbRoom => rooms.All(room => dbRoom.RoomId != room.RoomId)).ToList();
+
+        _context.TabRooms.AddRange(_mapper.Map<List<TabRoom>>(newRooms));
+        _context.TabRooms.RemoveRange(oldRooms);
+
+        await _context.SaveChangesAsync();
+        return Ok();
     }
 }
