@@ -53,7 +53,7 @@ public class ComputersController : ControllerBase
     [HttpGet("{name}")]
     public async Task<IActionResult> GetComputer(string name)
     {
-        if (await _context.TabComputers.FirstOrDefaultAsync(x => x.Name == name) is { } computer)
+        if (await _context.TabComputers.FirstOrDefaultAsync(x => x.Name.Contains(name)) is { } computer)
             return Ok(_mapper.Map<ApiModels.Computer>(computer));
         return NotFound();
     }
