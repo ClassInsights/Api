@@ -199,14 +199,14 @@ public class UserController : ControllerBase
     public async Task<IActionResult> LoginByWinAuth()
     {
         if (HttpContext.User.Identity is not WindowsIdentity { IsAuthenticated: true } identity)
-            return BadRequest();
+            return BadRequest("You need to send NTML");
 
         if (await HttpContext.Connection.GetClientCertificateAsync() is not
             { } clientCertificate /* || !clientCertificate.Verify()*/)
-            return BadRequest();
+            return BadRequest("Invalid Certificate");
 
         if (clientCertificate.Thumbprint != _config["Dashboard:CertificateThumbprint"]?.ToUpper())
-            return Unauthorized("Invalid certificate");
+            return Unauthorized("Wrong certificate");
 
         var subjects = new ClaimsIdentity(new[]
         {
