@@ -100,8 +100,9 @@ public class ClassesController : ControllerBase
         foreach (var klasse in classes.Where(klasse => dbClasses.All(dbClass => dbClass.ClassId != klasse.ClassId)))
         {
             // build azure group name
-            var grade = int.Parse(klasse.Name[..1]);
-
+            if (!int.TryParse(klasse.Name[..1], out var grade))
+                continue;
+            
             var startDate = DateTime.Parse(_config["Dashboard:SchoolYear:StartDate"]!);
             var startYear = startDate.Year - grade + 1;
             var type = klasse.Name[1..];
