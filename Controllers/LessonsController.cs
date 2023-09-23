@@ -1,5 +1,7 @@
-﻿using Api.Models;
+﻿using Api.Attributes;
+using Api.Models;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,6 +39,8 @@ public class LessonsController : ControllerBase
     /// <param name="lessons">List of new lessons</param>
     /// <returns></returns>
     [HttpPost]
+    [IsLocal]
+    [AllowAnonymous]
     public async Task<IActionResult> AddLessons(List<ApiModels.Lesson> lessons)
     {
         if (!lessons.Any()) return Ok();
