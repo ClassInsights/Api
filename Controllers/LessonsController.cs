@@ -47,9 +47,9 @@ public class LessonsController : ControllerBase
 
         // delete all lessons
         await _context.TabLessons.ExecuteDeleteAsync();
-
+        
         // reset auto increment id
-        await _context.Database.ExecuteSqlRawAsync("DBCC CHECKIDENT (tabLessons, RESEED, 0);");
+        await _context.Database.ExecuteSqlRawAsync("DBCC CHECKIDENT (tabLesson, RESEED, 0);");
 
         // add new lessons
         await _context.TabLessons.AddRangeAsync(_mapper.Map<List<TabLesson>>(lessons));
