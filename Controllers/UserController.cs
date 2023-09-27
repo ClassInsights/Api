@@ -1,6 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -201,19 +202,12 @@ public class UserController : ControllerBase
         if (HttpContext.User.Identity is not WindowsIdentity { IsAuthenticated: true } identity)
             return BadRequest("You need to send NTML");
 
-        if (await HttpContext.Connection.GetClientCertificateAsync() is not
-            { } clientCertificate /* || !clientCertificate.Verify()*/)
-            return BadRequest("Invalid Certificate");
-
-        if (clientCertificate.Thumbprint != _config["Dashboard:CertificateThumbprint"]?.ToUpper())
-            return Unauthorized("Wrong certificate");
-
         var subjects = new ClaimsIdentity(new[]
         {
             new Claim(JwtRegisteredClaimNames.Name, identity.Name)
         });
 
-        if (identity.User?.Value is { } sid)
+        if (identity.User != null && identity.User.Value is { } sid)
             subjects.AddClaim(new Claim(JwtRegisteredClaimNames.Sub, sid));
 
         if (identity.User != null && _config["Dashboard:DomainSid"] is { } domainSid &&
@@ -224,13 +218,54 @@ public class UserController : ControllerBase
                 ? new Claim(ClaimTypes.Role, "Admin")
                 : new Claim(ClaimTypes.Role, "Student"));
         }
-        else // if user is not in domain then there is no user logged in on pc
+        else // check certificate if user is not in domain
+        {
+            if (await HttpContext.Connection.GetClientCertificateAsync() is not
+                    { } clientCertificate || !ValidateClientCert(clientCertificate))
+                return BadRequest("Invalid Certificate");
             subjects.AddClaim(new Claim(ClaimTypes.Role, "Guest"));
+        }
 
         subjects.AddClaim(new Claim(ClaimTypes.Role, "Computer"));
 
         var token = GenJwtToken(subjects);
         return token is null ? Unauthorized() : Ok(token);
+    }
+
+    // https://stackoverflow.com/a/17225510/16871250
+    private bool ValidateClientCert(X509Certificate2 certificateToValidate)
+    {
+        var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
+        store.Open(OpenFlags.ReadOnly);
+        
+        if (_config["Dashboard:CASubject"] is not { } caSubject)
+            throw new Exception("No CASubject specified!");
+
+        var certs = store.Certificates.Find(X509FindType.FindBySubjectName, caSubject, false);
+        store.Close();
+
+        if (certs.Count < 1)
+            throw new Exception("No certificate found in Store!");
+
+        var authority = certs.First();
+
+        var chain = new X509Chain();
+        chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+        chain.ChainPolicy.RevocationFlag = X509RevocationFlag.ExcludeRoot;
+        chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
+        chain.ChainPolicy.VerificationTime = DateTime.Now;
+        chain.ChainPolicy.UrlRetrievalTimeout = new TimeSpan(0, 0, 0);
+
+        chain.ChainPolicy.ExtraStore.Add(authority);
+
+        var isChainValid = chain.Build(certificateToValidate);
+        
+        if (!isChainValid)
+            return false;
+
+        // Check if Thumbprints of Authority match
+        var valid = chain.ChainElements.Any(x => x.Certificate.Thumbprint == authority.Thumbprint);
+        return valid;
     }
 
     private async Task<ClaimsIdentity> GetClaimsFromGraph(int id, User graphUser)
