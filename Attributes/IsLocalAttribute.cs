@@ -16,7 +16,7 @@ public class IsLocalAttribute : Attribute, IAuthorizationFilter
     }
 
     // https://stackoverflow.com/a/44775206/16871250
-    private static bool IsLocalRequest(HttpContext context)
+    public static bool IsLocalRequest(HttpContext context)
     {
         return context.Connection.RemoteIpAddress != null &&
                (Equals(context.Connection.RemoteIpAddress, context.Connection.LocalIpAddress) ||

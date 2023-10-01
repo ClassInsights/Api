@@ -5,6 +5,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
+using Api.Attributes;
 using Api.Models;
 using Azure.Identity;
 using Microsoft.AspNetCore.Authentication.Negotiate;
@@ -210,11 +211,13 @@ public class UserController : ControllerBase
         if (identity.User != null && identity.User.Value is { } sid)
             subjects.AddClaim(new Claim(JwtRegisteredClaimNames.Sub, sid));
 
-        if (identity.User != null && _config["Dashboard:DomainSid"] is { } domainSid &&
-            identity.User.IsEqualDomainSid(new SecurityIdentifier(domainSid)))
+        if (_config["Dashboard:DomainSid"] is { } domainSid &&
+            ((identity.User != null && identity.User.IsEqualDomainSid(new SecurityIdentifier(domainSid))) ||
+             IsLocalAttribute.IsLocalRequest(HttpContext)))
         {
             var principal = new WindowsPrincipal(identity);
-            subjects.AddClaim(principal.IsInRole(new SecurityIdentifier(WellKnownSidType.AccountDomainAdminsSid, new SecurityIdentifier(domainSid)))
+            subjects.AddClaim(principal.IsInRole(new SecurityIdentifier(WellKnownSidType.AccountDomainAdminsSid,
+                new SecurityIdentifier(domainSid)))
                 ? new Claim(ClaimTypes.Role, "Admin")
                 : new Claim(ClaimTypes.Role, "Student"));
         }
@@ -237,7 +240,7 @@ public class UserController : ControllerBase
     {
         var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
         store.Open(OpenFlags.ReadOnly);
-        
+
         if (_config["Dashboard:CASubject"] is not { } caSubject)
             throw new Exception("No CASubject specified!");
 
@@ -259,7 +262,7 @@ public class UserController : ControllerBase
         chain.ChainPolicy.ExtraStore.Add(authority);
 
         var isChainValid = chain.Build(certificateToValidate);
-        
+
         if (!isChainValid)
             return false;
 
