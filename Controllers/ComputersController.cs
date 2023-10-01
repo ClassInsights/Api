@@ -1,4 +1,5 @@
 ﻿using System.Net.WebSockets;
+using System.Text;
 using Api.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -38,7 +39,7 @@ public class ComputersController : ControllerBase
         var tabComputer = _mapper.Map<TabComputer>(computer);
         _context.Update(tabComputer);
         await _context.SaveChangesAsync();
-        
+
         // map tabComputer to receive new ComputerId if it was created
         return Ok(_mapper.Map<ApiModels.Computer>(tabComputer));
     }
@@ -59,23 +60,25 @@ public class ComputersController : ControllerBase
     }
 
     /// <summary>
-    ///     Force PC Shutdown
+    ///     Send command to Computer
     /// </summary>
-    /// <param name="pcId">Id of Pc</param>
+    /// <param name="computerId">Id of Computer</param>
+    /// <param name="command">Action which Computer should perform (shutdown, restart, logoff)</param>
     /// <returns></returns>
-    [HttpDelete("{pcId:int}")]
+    [HttpPatch("{computerId:int}/{command}")]
     [Authorize(Roles = "Teacher")]
-    public async Task<IActionResult> ShutdownComputer(int pcId)
+    public async Task<IActionResult> SendCommand(int computerId, string command)
     {
-        if (!WebSocketController.PcWebSockets.TryGetValue(pcId, out var pcWebsocket))
+        if (!WebSocketController.PcWebSockets.TryGetValue(computerId, out var pcWebsocket))
             return NotFound();
 
         // check if websocket is still alive
         if (pcWebsocket.State != WebSocketState.Open)
             return NotFound();
 
-        // send shutdown
-        await pcWebsocket.SendAsync("shutdown"u8.ToArray(), WebSocketMessageType.Text, true, CancellationToken.None);
+        // send command
+        await pcWebsocket.SendAsync(Encoding.UTF8.GetBytes($"{command}").ToArray(), WebSocketMessageType.Text, true,
+            CancellationToken.None);
         return Ok();
     }
 }
