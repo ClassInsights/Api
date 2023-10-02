@@ -77,7 +77,7 @@ public class ComputersController : ControllerBase
             return NotFound();
 
         // send command
-        await pcWebsocket.SendAsync(Encoding.UTF8.GetBytes($"{command}").ToArray(), WebSocketMessageType.Text, true,
+        await pcWebsocket.SendAsync(Encoding.UTF8.GetBytes(command).ToArray(), WebSocketMessageType.Text, true,
             CancellationToken.None);
         return Ok();
     }
