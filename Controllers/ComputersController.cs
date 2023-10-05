@@ -79,6 +79,15 @@ public class ComputersController : ControllerBase
         // send command
         await pcWebsocket.SendAsync(Encoding.UTF8.GetBytes(command).ToArray(), WebSocketMessageType.Text, true,
             CancellationToken.None);
+
+        var computer = await _context.TabComputers.FindAsync(computerId);
+        _context.TabLogs.Add(new TabLog
+        {
+            Message = $"Send {command} to '{computer?.Name}' (Id: {computerId})",
+            Username = HttpContext.User.FindFirst("name")?.Value ?? "No username found in Token",
+            Date = DateTime.Now
+        });
+        await _context.SaveChangesAsync();
         return Ok();
     }
 }

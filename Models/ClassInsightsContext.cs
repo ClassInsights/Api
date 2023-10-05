@@ -17,6 +17,8 @@ public partial class ClassInsightsContext : DbContext
 
     public virtual DbSet<TabLesson> TabLessons { get; set; }
 
+    public virtual DbSet<TabLog> TabLogs { get; set; }
+
     public virtual DbSet<TabRoom> TabRooms { get; set; }
 
     public virtual DbSet<TabSubject> TabSubjects { get; set; }
@@ -86,6 +88,18 @@ public partial class ClassInsightsContext : DbContext
             entity.HasOne(d => d.Subject).WithMany(p => p.TabLessons)
                 .HasForeignKey(d => d.SubjectId)
                 .HasConstraintName("FK_tabLessons_tabSubjects");
+        });
+
+        modelBuilder.Entity<TabLog>(entity =>
+        {
+            entity.HasKey(e => e.LogId);
+
+            entity.ToTable("tabLog");
+
+            entity.Property(e => e.LogId).HasColumnName("LogID");
+            entity.Property(e => e.Date).HasColumnType("datetime");
+            entity.Property(e => e.Message).HasMaxLength(50);
+            entity.Property(e => e.Username).HasMaxLength(50);
         });
 
         modelBuilder.Entity<TabRoom>(entity =>
