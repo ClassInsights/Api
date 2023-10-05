@@ -34,7 +34,7 @@ public class ComputersController : ControllerBase
     [Authorize(Roles = "Computer")]
     public async Task<IActionResult> AddComputerTask(ApiModels.Computer computer)
     {
-        if (HttpContext.User.Identity?.Name is { } name) computer = computer with { LastUser = name };
+        if (HttpContext.User.Identity?.Name is { } name) computer.LastUser = name;
 
         var tabComputer = _mapper.Map<TabComputer>(computer);
         _context.Update(tabComputer);
