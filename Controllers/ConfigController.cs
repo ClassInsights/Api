@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,7 @@ public class ConfigController : ControllerBase
     /// <param name="config">New Config Object</param>
     /// <returns></returns>
     [HttpPut]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateConfig(dynamic config)
     {
         var rawConfig = await System.IO.File.ReadAllTextAsync("appsettings.json");
