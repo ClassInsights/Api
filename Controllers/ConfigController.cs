@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
@@ -36,6 +36,25 @@ public class ConfigController : ControllerBase
         var jsonConfig = JObject.Parse(rawConfig);
 
         jsonConfig["Dashboard"] = JObject.Parse(config.ToString());
+
+        await System.IO.File.WriteAllTextAsync("appsettings.json", jsonConfig.ToString(Formatting.Indented));
+        return Ok();
+    }
+
+    /// <summary>
+    ///     Update ClientCredentials for Azure Graph Authentication
+    /// </summary>
+    /// <param name="clientCredentials">New ClientCredentials</param>
+    /// <returns></returns>
+    [HttpPatch("graph/credentials")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UpdateGraphSecret(List<Dictionary<string, string>> clientCredentials)
+    {
+        var rawConfig = await System.IO.File.ReadAllTextAsync("appsettings.json");
+        var jsonConfig = JObject.Parse(rawConfig);
+
+        jsonConfig["AzureAd"] ??= new JObject();
+        jsonConfig["AzureAd"]!["ClientCredentials"] = JArray.FromObject(clientCredentials);
 
         await System.IO.File.WriteAllTextAsync("appsettings.json", jsonConfig.ToString(Formatting.Indented));
         return Ok();
