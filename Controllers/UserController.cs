@@ -299,8 +299,9 @@ public class UserController : ControllerBase
         }
 
         // return if user is no student
-        if (groups.Select(x => (Group)x).Where(x => Regex.IsMatch(x.DisplayName!, "^[0-9]{4}_[a-zA-Z]+$")).ToList() is
-            not { } classGroups)
+        var regex = _config["Dashboard:AzureGroupPattern"]?.Replace("YEAR", "[0-9]{4}").Replace("CLASS", "[A-Za-z]+");
+        if (groups.Select(x => (Group)x).Where(x => Regex.IsMatch(x.DisplayName!, $"^{regex}$")).ToList() is
+                not { } classGroups || classGroups is { Count: 0 })
             return subjects;
 
         subjects.AddClaim(new Claim(ClaimTypes.Role, "Student"));
