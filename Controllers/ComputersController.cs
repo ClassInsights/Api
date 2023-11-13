@@ -32,10 +32,9 @@ public class ComputersController : ControllerBase
     /// </returns>
     [HttpPost]
     [Authorize(Roles = "Computer")]
-    public async Task<IActionResult> AddComputerTask(ApiModels.Computer computer)
+    public async Task<IActionResult> UpdateComputer(ApiModels.Computer computer)
     {
         if (HttpContext.User.Identity?.Name is { } name) computer.LastUser = name;
-
         var tabComputer = _mapper.Map<TabComputer>(computer);
         _context.Update(tabComputer);
         await _context.SaveChangesAsync();
