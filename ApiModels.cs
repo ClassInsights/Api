@@ -3,7 +3,7 @@
 /// <summary>
 ///     DTO Models for Api requests and responses
 /// </summary>
-public abstract class ApiModels
+public class ApiModels
 {
     /// <summary>
     ///     Class object
@@ -12,7 +12,7 @@ public abstract class ApiModels
     /// <param name="Name">Name of Class</param>
     /// <param name="Head">Head of Class</param>
     /// <param name="AzureGroupId">Id of Group in AzureAd</param>
-    public abstract record Class(int ClassId, string Name, string Head, string? AzureGroupId);
+    public record Class(int ClassId, string Name, string Head, string? AzureGroupId);
 
     /// <summary>
     ///     Lesson object
@@ -23,58 +23,36 @@ public abstract class ApiModels
     /// <param name="ClassId">Id of Class</param>
     /// <param name="StartTime">Lesson begin</param>
     /// <param name="EndTime">Lesson end</param>
-    public abstract record Lesson(int LessonId, int RoomId, int SubjectId, int ClassId, DateTime? StartTime, DateTime? EndTime);
+    public record Lesson(int LessonId, int RoomId, int SubjectId, int ClassId, DateTime? StartTime, DateTime? EndTime);
 
     /// <summary>
     ///     Computer object
     /// </summary>
     public class Computer
     {
-        /// <summary>
-        ///     Computer object
-        /// </summary>
-        /// <param name="computerId">Id of Computer</param>
-        /// <param name="roomId">Id of Room</param>
-        /// <param name="name">Name of Computer</param>
-        /// <param name="macAddress">MAC Address of Computer</param>
-        /// <param name="ipAddress">IP Address of Computer</param>
-        /// <param name="lastUser">Last signed in User</param>
-        /// <param name="lastSeen">Last time of Heartbeat</param>
-        public Computer(int computerId, int roomId, string name, string macAddress, string ipAddress,
-            string? lastUser, DateTime lastSeen)
-        {
-            ComputerId = computerId;
-            RoomId = roomId;
-            Name = name;
-            MacAddress = macAddress;
-            IpAddress = ipAddress;
-            LastUser = lastUser;
-            LastSeen = lastSeen;
-        }
-
         /// <summary>Id of Computer</summary>
-        public int ComputerId { get; }
+        public int ComputerId { get; set; }
 
         /// <summary>Id of Room</summary>
-        public int RoomId { get; }
+        public int RoomId { get; set; }
 
         /// <summary>Name of Computer</summary>
-        public string Name { get; }
+        public string Name { get; set; }
 
         /// <summary>MAC Address of Computer</summary>
-        public string MacAddress { get; }
+        public string MacAddress { get; set; }
 
         /// <summary>IP Address of Computer</summary>
-        public string IpAddress { get; }
+        public string IpAddress { get; set; }
 
         /// <summary>Last signed in User</summary>
         public string? LastUser { get; set; }
 
         /// <summary>Last time of Heartbeat</summary>
-        private DateTime LastSeen { get; }
+        public DateTime LastSeen { get; set; }
 
         /// <summary>
-        /// Returns the Online Status of a Computer
+        /// Online state of Computer
         /// </summary>
         public bool Online => LastSeen > DateTime.Now.AddSeconds(-10);
     }
@@ -94,7 +72,7 @@ public abstract class ApiModels
     /// <param name="SubjectId">Id of Subject</param>
     /// <param name="Name">Name of Subject</param>
     /// <param name="LongName">Fullname of Subject</param>
-    public abstract record Subject(int SubjectId, string Name, string LongName);
+    public record Subject(int SubjectId, string Name, string LongName);
 
     /// <summary>
     ///     SchoolYear object
