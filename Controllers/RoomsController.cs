@@ -32,7 +32,8 @@ public class RoomsController : ControllerBase
     [HttpGet("{roomName}")]
     public async Task<IActionResult> GetRoomByName(string roomName)
     {
-        var room = await _context.TabRooms.FirstOrDefaultAsync(x => x.Name != null && x.Name.Contains(roomName));
+        // room names in db must start with name DV and number e.g. DV206
+        var room = await _context.TabRooms.FirstOrDefaultAsync(x => x.Name != null && x.Name.Contains(roomName.Substring(0,3)));
         return Ok(_mapper.Map<ApiModels.Room>(room));
     }
 
