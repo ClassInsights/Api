@@ -50,6 +50,9 @@ public class ApiModels
 
         /// <summary>Last time of Heartbeat</summary>
         public DateTime LastSeen { get; set; }
+        
+        /// <summary>Version of ClassInsights Client</summary>
+        public string? Version { get; set; }
 
         /// <summary>
         /// Online state of Computer

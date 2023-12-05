@@ -19,5 +19,7 @@ public partial class TabComputer
 
     public string? LastUser { get; set; }
 
+    public string? Version { get; set; }
+
     public virtual TabRoom Room { get; set; } = null!;
 }

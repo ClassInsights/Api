@@ -58,6 +58,7 @@ public partial class ClassInsightsContext : DbContext
             entity.Property(e => e.MacAddress).HasMaxLength(50);
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.RoomId).HasColumnName("RoomID");
+            entity.Property(e => e.Version).HasMaxLength(20);
 
             entity.HasOne(d => d.Room).WithMany(p => p.TabComputers)
                 .HasForeignKey(d => d.RoomId)
