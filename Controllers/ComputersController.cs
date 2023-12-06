@@ -65,7 +65,7 @@ public class ComputersController : ControllerBase
     /// <param name="command">Action which Computer should perform (shutdown, restart, logoff)</param>
     /// <returns></returns>
     [HttpPatch("{computerId:int}/{command}")]
-    [Authorize(Roles = "Teacher")]
+    [Authorize(Roles = "Teacher, Admin")]
     public async Task<IActionResult> SendCommand(int computerId, string command)
     {
         if (!WebSocketController.ComputerWebSockets.TryGetValue(computerId, out var pcWebsocket))
