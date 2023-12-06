@@ -18,82 +18,51 @@ public class WebSocketController : ControllerBase
     {
         _context = context;
     }
-    
+
+    /// <summary>
+    /// Dictionary of all client WebSockets for a computer
+    /// </summary>
+    private static readonly Dictionary<int, List<WebSocket>> AppWebSockets = new();
+
     /// <summary>
     /// Dictionary of all connected PcWebSockets
     /// </summary>
-    public static readonly Dictionary<int, WebSocket> PcWebSockets = new();
-
+    public static readonly Dictionary<int, WebSocket> ComputerWebSockets = new();
+    
     /// <summary>
     ///     Returns power and usage information of Pc
     /// </summary>
     /// <param name="computerId">Id of Pc</param>
-    [Route("/ws/{computerId:int}")]
-    public async Task GetApp(int computerId)
+    [Route("/ws/computers/{computerId:int}")]
+    public async Task GetComputerInformation(int computerId)
     {
         if (!HttpContext.WebSockets.IsWebSocketRequest)
         {
             HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
             return;
         }
-
-        // check if any websockets for requested pc
-        if (!PcWebSockets.TryGetValue(computerId, out var pcWebSocket))
-        {
-            HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
-            return;
-        }
-
-        using var clientWebSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
         
-        // while connection is alive, read pc websockets and send result to client websocket
-        while (!clientWebSocket.CloseStatus.HasValue)
-            // skip if close handshake is performed
-            if (pcWebSocket.State == WebSocketState.Open && await ReadTextAsync(pcWebSocket) is { } result)
-            {
-                var heartbeat = JsonConvert.DeserializeObject<Heartbeat>(result);
-                if (heartbeat == null)
-                    continue;
+        using var clientWebSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+        if (!AppWebSockets.ContainsKey(computerId))
+            AppWebSockets[computerId] = new List<WebSocket>();
+        
+        AppWebSockets[computerId].Add(clientWebSocket);
+        
+        // while connection is alive
+        while (!clientWebSocket.CloseStatus.HasValue) await Task.Delay(500); // keep websocket alive
 
-                await SendTextAsync(JsonConvert.SerializeObject(heartbeat), clientWebSocket);
-
-                // set lastSeen every 10 seconds to now 
-                if (!(stopwatch.Elapsed.TotalSeconds > 10))
-                    continue;
-                
-                stopwatch.Restart();
-                
-                var computer = await _context.TabComputers.FindAsync(heartbeat.ComputerId);
-                if (computer == null)
-                    continue;
-                
-                computer.LastSeen = DateTime.Now;
-                await _context.SaveChangesAsync();
-            }
-            else
-            {
-                await Task.Delay(500);
-            }
-
+        // remove ws from list if client disconnects
+        AppWebSockets[computerId].Remove(clientWebSocket);
+        
         // close connection because client has disconnected
         await HandleCloseAsync(clientWebSocket);
-
-        // set lastSeen to now -10 to achieve "offline" state
-        if (await _context.TabComputers.FindAsync(computerId) is { } dbPc)
-        {
-            dbPc.LastSeen = DateTime.Now.AddSeconds(-11);
-            await _context.SaveChangesAsync();
-        }
     }
 
     /// <summary>
     ///     Send power and usage information of pc
     /// </summary>
-    [Route("/ws/pc")]
-    public async Task GetPc()
+    [Route("/ws/computers")]
+    public async Task SendComputerInformation()
     {
         if (!HttpContext.WebSockets.IsWebSocketRequest)
         {
@@ -101,27 +70,70 @@ public class WebSocketController : ControllerBase
             return;
         }
 
-        using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+        using var computerWebSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+        
+        var sendWatch = new Stopwatch();
+        var onlineWatch = new Stopwatch();
+        sendWatch.Start();
+        onlineWatch.Start();
 
-        // read text from socket
-        var input = await ReadTextAsync(webSocket);
+        Heartbeat? lastHeartbeat = null;
+        while (!computerWebSocket.CloseStatus.HasValue) {
+            // wait min 500ms after each send 
+            if (sendWatch.Elapsed.TotalMilliseconds < 500)
+            {
+                await Task.Delay(Math.Abs((int) (500 - sendWatch.Elapsed.TotalMilliseconds)));
+                sendWatch.Restart();
+            }
+            
+            // read text from socket
+            var input = await ReadTextAsync(computerWebSocket);
 
-        // return if shutdown is requested
-        if (input is null)
-            return;
+            // return if shutdown is requested
+            if (input is null)
+                return;
 
-        // deserialize to object
-        var heartbeat = JsonConvert.DeserializeObject<Heartbeat>(input);
+            // deserialize to object
+            var heartbeat = JsonConvert.DeserializeObject<Heartbeat>(input);
 
-        // check if valid heartbeat object
-        // todo: return error object
-        if (heartbeat is null)
-            return;
+            // check if valid heartbeat object
+            if (heartbeat is null)
+                continue;
 
-        // add socket to static dictionary, so we can access it later
-        PcWebSockets[heartbeat.ComputerId] = webSocket;
+            // set ws in dictionary on first heartbeat
+            if (lastHeartbeat is null)
+            {
+                lastHeartbeat = heartbeat;
+                ComputerWebSockets[lastHeartbeat.ComputerId] = computerWebSocket;
+            }
 
-        while (webSocket.State != WebSocketState.Closed) await Task.Delay(10000); // keep websocket alive
+            // check if any clients are connected
+            if (AppWebSockets.TryGetValue(heartbeat.ComputerId, out var appWebsockets))
+            {
+                // send information of computer to all connected clients
+                var sendInformationTasks = (from appWebsocket in appWebsockets
+                    where appWebsocket.State == WebSocketState.Open
+                    select SendTextAsync(JsonConvert.SerializeObject(heartbeat), appWebsocket)).ToList();
+                await Task.WhenAll(sendInformationTasks);
+            }
+
+            // update LastSeen all 8 seconds
+            if (!(onlineWatch.Elapsed.TotalSeconds > 8))
+                continue;
+            
+            var computer = await _context.TabComputers.FindAsync(heartbeat.ComputerId);
+            if (computer == null)
+                continue;
+                
+            computer.LastSeen = DateTime.Now;
+            await _context.SaveChangesAsync();
+        }
+        
+        // remove ws from Dictionary
+        if (lastHeartbeat != null) ComputerWebSockets.Remove(lastHeartbeat.ComputerId);
+
+        // close connection because client has disconnected
+        await HandleCloseAsync(computerWebSocket);
     }
 
     private static async Task SendTextAsync(string text, WebSocket webSocket)

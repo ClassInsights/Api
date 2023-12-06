@@ -68,7 +68,7 @@ public class ComputersController : ControllerBase
     [Authorize(Roles = "Teacher")]
     public async Task<IActionResult> SendCommand(int computerId, string command)
     {
-        if (!WebSocketController.PcWebSockets.TryGetValue(computerId, out var pcWebsocket))
+        if (!WebSocketController.ComputerWebSockets.TryGetValue(computerId, out var pcWebsocket))
             return NotFound();
 
         // check if websocket is still alive
