@@ -279,24 +279,14 @@ public class UserController : ControllerBase
             return subjects;
 
         subjects.AddClaim(new Claim(ClaimTypes.Role, "Student"));
-
-        if (classGroups.FirstOrDefault() is not { } classGroup)
+        
+        if (classGroups.IsNullOrEmpty())
             return subjects;
-
-        // substring of first 4 chars must be start year e.g. 2019
-        // var startYear = Convert.ToInt32(classGroup.DisplayName?[..4]);
-
-        // hypothetical school start from which grade will be calculated
-        // var schoolStart = new DateTime(startYear, 9, 1);
-
-        // always round grade up, because in 4th grade we've just been 3,.. years in school
-        // var grade = Math.Round((DateTime.Now - schoolStart).TotalDays / 365.25, MidpointRounding.ToPositiveInfinity);
-
-        // substring from char 5 must be school type, e.g. KK
-        // subjects.AddClaim(new Claim("class", $"{grade}{classGroup.DisplayName?[5..]}"));
-
-        // add id of class
-        if (await _context.TabClasses.FirstOrDefaultAsync(x => x.AzureGroupId == classGroup.Id) is { } klasse)
+        
+        var classIds = classGroups.Select(x => x.Id);
+        
+        // add ids of classes
+        foreach (var klasse in await _context.TabClasses.Where(dbClass => classIds.Contains(dbClass.AzureGroupId)).ToListAsync())
             subjects.AddClaim(new Claim("class", klasse.ClassId.ToString()));
 
         return subjects;
