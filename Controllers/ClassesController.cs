@@ -28,6 +28,19 @@ public class ClassesController : ControllerBase
         _config = config;
         _mapper = mapper;
     }
+    
+    /// <summary>
+    ///     Find all classes
+    /// </summary>
+    /// <returns>
+    ///     <see cref="List{T}" /> whose generic type argument is <see cref="ApiModels.Class" />
+    /// </returns>
+    [HttpGet]
+    public async Task<IActionResult> GetAllClasses()
+    {
+        var classes = await _context.TabClasses.ToListAsync();
+        return Ok(_mapper.Map<List<ApiModels.Class>>(classes));
+    }
 
     /// <summary>
     ///     Find class by Name
