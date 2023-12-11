@@ -45,9 +45,6 @@ var mapperConfig = new MapperConfiguration(mc => { mc.AddProfile(new MappingProf
 
 builder.Services.AddSingleton(mapperConfig.CreateMapper());
 
-// Enable Memory Cache
-builder.Services.AddMemoryCache();
-
 // Enable CORS
 builder.Services.AddCors(options =>
 {

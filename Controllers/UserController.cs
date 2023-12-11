@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.Identity.Web;
@@ -30,15 +29,13 @@ public class UserController : ControllerBase
     private readonly IConfiguration _config;
     private readonly ClassInsightsContext _context;
     private readonly GraphServiceClient _graphClient;
-    private readonly IMemoryCache _memoryCache;
 
     /// <inheritdoc />
-    public UserController(IConfiguration config, ClassInsightsContext context, IMemoryCache memoryCache,
+    public UserController(IConfiguration config, ClassInsightsContext context, 
         GraphServiceClient graphClient)
     {
         _config = config;
         _context = context;
-        _memoryCache = memoryCache;
         _graphClient = graphClient;
     }
 
@@ -91,37 +88,14 @@ public class UserController : ControllerBase
 
         var subjects = await GetClaimsFromGraph(dbUser.UserId, me);
         var token = GenJwtToken(subjects);
-
-        var tokenCode = Guid.NewGuid().ToString("N");
-
-        // save tokens to memory and set expiration
-        _memoryCache.Set(tokenCode, new
-        {
-            access_token = token,
-            refresh_token = refreshToken
-        }, new MemoryCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2),
-            Priority = CacheItemPriority.NeverRemove
-        });
-
+        
         return token is null
             ? Unauthorized()
-            : Redirect($"classinsights://success?code={tokenCode}");
-    }
-
-    /// <summary>
-    ///     Returns Access and Refresh Token by Code
-    /// </summary>
-    /// <param name="code">Code from OAuth2 Graph Login Endpoint</param>
-    /// <returns>Access and Refresh Token object</returns>
-    [HttpGet("login/{code}")]
-    [AllowAnonymous]
-    public Task<IActionResult> LoginByCode(string code)
-    {
-        return !_memoryCache.TryGetValue(code, out var tokens)
-            ? Task.FromResult<IActionResult>(NotFound())
-            : Task.FromResult<IActionResult>(Ok(tokens));
+            : Ok(new
+            {
+                access_token = token,
+                refresh_token = refreshToken
+            });
     }
 
     /// <summary>
