@@ -138,7 +138,7 @@ public class ClassesController : ControllerBase
 
         // delete old classes from db
         var oldClasses = dbClasses.Where(dbClass => classes.All(klasse => klasse.ClassId != dbClass.ClassId)).ToList();
-        if (oldClasses.Any())
+        if (oldClasses.Count > 0)
             _context.RemoveRange(oldClasses);
 
         await _context.SaveChangesAsync();
