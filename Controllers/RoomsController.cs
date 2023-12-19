@@ -1,6 +1,7 @@
 ﻿using Api.Attributes;
 using Api.Models;
 using AutoMapper;
+using InfluxDB.Client;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,13 +14,15 @@ namespace Api.Controllers;
 public class RoomsController : ControllerBase
 {
     private readonly ClassInsightsContext _context;
+    private readonly IConfiguration _config;
     private readonly IMapper _mapper;
 
     /// <inheritdoc />
-    public RoomsController(ClassInsightsContext context, IMapper mapper)
+    public RoomsController(ClassInsightsContext context, IMapper mapper, IConfiguration config)
     {
         _context = context;
         _mapper = mapper;
+        _config = config;
     }
 
     /// <summary>
@@ -100,5 +103,35 @@ public class RoomsController : ControllerBase
 
         await _context.SaveChangesAsync();
         return Ok();
+    }
+
+    /// <summary>
+    ///     Find the values of the sensors in a specific Room
+    /// </summary>
+    /// <param name="sensorName">Name of Sensor</param>
+    /// <returns></returns>
+    [HttpGet("{sensorName}/sensors")]
+    public async Task<IActionResult> GetSensors(string sensorName)
+    {
+        if (_config["Dashboard:Influx:Query"] is not { } query || _config["Dashboard:Influx:Token"] is not { } token || _config["Dashboard:Influx:Server"] is not { } server || _config["Dashboard:Influx:Organisation"] is not { } organisation)
+            return NotFound("Missing config parameters!");
+        
+        using var influxDbClient = new InfluxDBClient(server, token);
+        
+        var fluxTables = await influxDbClient.GetQueryApi().QueryAsync(query.Replace("%SENSOR_TOPIC%", sensorName), organisation);
+        
+        var records = fluxTables.Select(fluxTable =>
+        {     
+            return fluxTable.Records.Select(x =>
+            {
+                var date = x.GetTimeInDateTime();
+                var field = x.GetField();
+                var value = x.GetValue();
+
+                return new { date, field, value };
+            }).MaxBy(x => x.date);
+        }).ToList();
+        
+        return Ok(records);
     }
 }
