@@ -12,7 +12,20 @@ public class ApiModels
     /// <param name="Name">Name of Class</param>
     /// <param name="Head">Head of Class</param>
     /// <param name="AzureGroupId">Id of Group in AzureAd</param>
-    public record Class(int ClassId, string Name, string Head, string? AzureGroupId);
+    public class Class
+    {
+        /// <summary>Id of Class</summary>
+        public int? ClassId { get; set; }
+
+        /// <summary>Name of Class</summary>
+        public string? Name { get; set; }
+
+        /// <summary>Head of Class</summary>
+        public string? Head { get; set; }
+
+        /// <summary>Id of Group in AzureAd</summary>
+        public string? AzureGroupId { get; set; }
+    }
 
     /// <summary>
     ///     Lesson object

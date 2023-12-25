@@ -1,6 +1,7 @@
 ﻿using Api.Attributes;
 using Api.Models;
 using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -38,8 +39,34 @@ public class ClassesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllClasses()
     {
-        var classes = await _context.TabClasses.ToListAsync();
+        var classes = await _context.TabClasses.AsNoTracking().ToListAsync();
         return Ok(_mapper.Map<List<ApiModels.Class>>(classes));
+    }
+
+    
+    /// <summary>
+    /// Modify classes
+    /// </summary>
+    /// <param name="patchDocument">New values for Class</param>
+    /// <returns></returns>
+    [HttpPatch]
+    public async Task<IActionResult> UpdateClass(JsonPatchDocument<List<ApiModels.Class>>? patchDocument)
+    {
+        var classes = await _context.TabClasses.AsNoTracking().ToListAsync();
+        
+        if (patchDocument == null)
+            return BadRequest();
+
+        var modelClasses = _mapper.Map<List<ApiModels.Class>>(classes);
+        patchDocument.ApplyTo(modelClasses, ModelState);
+
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+        
+        _context.UpdateRange(_mapper.Map<List<TabClass>>(modelClasses));
+        await _context.SaveChangesAsync();
+        
+        return Ok(modelClasses);
     }
 
     /// <summary>
@@ -52,7 +79,7 @@ public class ClassesController : ControllerBase
     [HttpGet("{name}")]
     public async Task<IActionResult> GetClass(string name)
     {
-        if (await _context.TabClasses.FirstOrDefaultAsync(x => x.Name == name) is { } klasse)
+        if (await _context.TabClasses.AsNoTracking().FirstOrDefaultAsync(x => x.Name == name) is { } klasse)
             return Ok(_mapper.Map<ApiModels.Class>(klasse));
         return NotFound();
     }
@@ -129,11 +156,10 @@ public class ClassesController : ControllerBase
                 configuration.Options.WithAuthenticationScheme("OpenIdConnect");
             });
 
+            klasse.AzureGroupId = groups?.Value?.FirstOrDefault()?.Id;
+            
             // set azureId
-            _context.TabClasses.Add(_mapper.Map<TabClass>(klasse with
-            {
-                AzureGroupId = groups?.Value?.FirstOrDefault()?.Id
-            }));
+            _context.TabClasses.Add(_mapper.Map<TabClass>(klasse));
         }
 
         // delete old classes from db
