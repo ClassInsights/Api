@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Api.Models;
 
-public partial class TabUser
+public partial class User
 {
     public int UserId { get; set; }
 

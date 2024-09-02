@@ -39,7 +39,7 @@ public class ClassesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllClasses()
     {
-        var classes = await _context.TabClasses.AsNoTracking().ToListAsync();
+        var classes = await _context.Classes.AsNoTracking().ToListAsync();
         return Ok(_mapper.Map<List<ApiModels.Class>>(classes));
     }
 
@@ -52,7 +52,7 @@ public class ClassesController : ControllerBase
     [HttpPatch]
     public async Task<IActionResult> UpdateClass(JsonPatchDocument<List<ApiModels.Class>>? patchDocument)
     {
-        var classes = await _context.TabClasses.AsNoTracking().ToListAsync();
+        var classes = await _context.Classes.AsNoTracking().ToListAsync();
         
         if (patchDocument == null)
             return BadRequest();
@@ -63,7 +63,7 @@ public class ClassesController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
         
-        _context.UpdateRange(_mapper.Map<List<TabClass>>(modelClasses));
+        _context.UpdateRange(_mapper.Map<List<Class>>(modelClasses));
         await _context.SaveChangesAsync();
         
         return Ok(modelClasses);
@@ -79,7 +79,7 @@ public class ClassesController : ControllerBase
     [HttpGet("{name}")]
     public async Task<IActionResult> GetClass(string name)
     {
-        if (await _context.TabClasses.AsNoTracking().FirstOrDefaultAsync(x => x.Name == name) is { } klasse)
+        if (await _context.Classes.AsNoTracking().FirstOrDefaultAsync(x => x.Name == name) is { } klasse)
             return Ok(_mapper.Map<ApiModels.Class>(klasse));
         return NotFound();
     }
@@ -94,7 +94,7 @@ public class ClassesController : ControllerBase
     [HttpGet("{classId:int}")]
     public async Task<IActionResult> GetClassById(int classId)
     {
-        if (await _context.TabClasses.FindAsync(classId) is not { } klasse)
+        if (await _context.Classes.FindAsync(classId) is not { } klasse)
             return NotFound();
         return Ok(_mapper.Map<ApiModels.Class>(klasse));
     }
@@ -110,7 +110,7 @@ public class ClassesController : ControllerBase
     public async Task<IActionResult> GetCurrentLesson(int classId)
     {
         // receive all lessons of class
-        var lessons = await _context.TabLessons.Where(x => x.ClassId == classId).ToListAsync();
+        var lessons = await _context.Lessons.Where(x => x.ClassId == classId).ToListAsync();
 
         // check minimum positive of difference between now and future
         var currentLesson = lessons.Where(x => (x.EndTime - DateTime.Now)?.TotalMilliseconds > 0)
@@ -134,7 +134,7 @@ public class ClassesController : ControllerBase
     public async Task<IActionResult> AddOrDeleteClasses(List<ApiModels.Class> classes)
     {
         // retrieve all classes from db
-        var dbClasses = await _context.TabClasses.ToListAsync();
+        var dbClasses = await _context.Classes.ToListAsync();
 
         // add new classes
         foreach (var klasse in classes.Where(klasse => dbClasses.All(dbClass => dbClass.ClassId != klasse.ClassId)))
@@ -159,7 +159,7 @@ public class ClassesController : ControllerBase
             klasse.AzureGroupId = groups?.Value?.FirstOrDefault()?.Id;
             
             // set azureId
-            _context.TabClasses.Add(_mapper.Map<TabClass>(klasse));
+            _context.Classes.Add(_mapper.Map<Class>(klasse));
         }
 
         // delete old classes from db

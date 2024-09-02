@@ -14,8 +14,6 @@ public static class ConfigureExtensions
     {
         services.AddSwaggerGen(c =>
         {
-            var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-            c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 In = ParameterLocation.Header,
@@ -42,14 +40,6 @@ public static class ConfigureExtensions
         });
     }
 
-    public static void AddDbConfiguration(this IServiceCollection services, IConfiguration config)
-    {
-        services.AddDbContext<ClassInsightsContext>(opt =>
-        {
-            opt.UseSqlServer(config.GetConnectionString("SqlServer"));
-        });
-    }
-
     public static void AddJwtAuthentication(this AuthenticationBuilder builder, IConfiguration config)
     {
         builder.AddJwtBearer(c =>
@@ -65,10 +55,5 @@ public static class ConfigureExtensions
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!))
             };
         });
-    }
-
-    public static void AddWinAuthentication(this AuthenticationBuilder builder)
-    {
-        builder.AddNegotiate();
     }
 }

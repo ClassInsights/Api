@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Api.Models;
 
-public partial class TabSubject
+public partial class Subject
 {
     public int SubjectId { get; set; }
 
@@ -11,5 +11,5 @@ public partial class TabSubject
 
     public string LongName { get; set; } = null!;
 
-    public virtual ICollection<TabLesson> TabLessons { get; set; } = new List<TabLesson>();
+    public virtual ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();
 }

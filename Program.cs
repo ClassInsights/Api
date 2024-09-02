@@ -1,21 +1,26 @@
 using System.Threading.RateLimiting;
 using Api;
+using Api.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Graph.Models.ExternalConnectors;
 using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers().AddNewtonsoftJson();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerConfiguration();
 
 // register own services
-builder.Services.AddDbConfiguration(builder.Configuration);
+builder.Services.AddDbContext<ClassInsightsContext>(options =>
+{
+    options.UseNpgsql(builder.Configuration.GetConnectionString("npgsql"));
+});
 
 // register authentications
 var authentication = builder.Services.AddAuthentication(c =>
@@ -26,7 +31,6 @@ var authentication = builder.Services.AddAuthentication(c =>
 });
 
 authentication.AddJwtAuthentication(builder.Configuration);
-authentication.AddWinAuthentication();
 
 // generate lowercase URLs
 builder.Services.Configure<RouteOptions>(options => { options.LowercaseUrls = true; });
@@ -86,17 +90,17 @@ builder.Services.AddRateLimiter(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline and Swagger
-app.UseSwagger(c => { c.RouteTemplate = "docs/{documentName}/docs.json"; });
 
 app.UseRateLimiter();
 
-app.UseSwaggerUI(c =>
+if (app.Environment.IsDevelopment())
 {
-    c.DocumentTitle = "API Documentation - ClassInsights";
-    c.RoutePrefix = "docs";
-    c.SwaggerEndpoint("/docs/v1/docs.json", "API v1");
-    c.InjectStylesheet("/swagger-ui/SwaggerDark.css");
-});
+    app.UseSwagger();
+    app.UseSwaggerUI(options => {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+        options.RoutePrefix = "docs";        
+    });
+}
 
 app.UseStaticFiles();
 

@@ -9,12 +9,12 @@ public class MappingProfile : Profile
     /// <inheritdoc />
     public MappingProfile()
     {
-        CreateMap<ApiModels.Room, TabRoom>();
-        CreateMap<ApiModels.Class, TabClass>().ReverseMap();
-        CreateMap<ApiModels.Lesson, TabLesson>().ReverseMap();
-        CreateMap<ApiModels.Subject, TabSubject>().ReverseMap();
-        CreateMap<ApiModels.Computer, TabComputer>().ReverseMap();
-        CreateMap<TabRoom, ApiModels.Room>()
+        CreateMap<ApiModels.Room, Room>();
+        CreateMap<ApiModels.Class, Class>().ReverseMap();
+        CreateMap<ApiModels.Lesson, Lesson>().ReverseMap();
+        CreateMap<ApiModels.Subject, Subject>().ReverseMap();
+        CreateMap<ApiModels.Computer, Computer>().ReverseMap();
+        CreateMap<Room, ApiModels.Room>()
             .ConstructUsing(x => new ApiModels.Room(x.RoomId, x.Name!, x.LongName!, null));
     }
 }

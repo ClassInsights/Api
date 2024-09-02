@@ -1,14 +1,11 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
-using Api.Attributes;
 using Api.Models;
+using Api.Utils;
 using Azure.Identity;
-using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +15,7 @@ using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
 using Group = Microsoft.Graph.Models.Group;
 using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
+using User = Api.Models.User;
 
 namespace Api.Controllers;
 
@@ -73,7 +71,7 @@ public class UserController : ControllerBase
 
         var refreshToken = GenerateRefreshToken();
 
-        var dbUser = new TabUser
+        var dbUser = new User
         {
             AzureUserId = me.Id,
             Email = me.Mail,
@@ -83,7 +81,7 @@ public class UserController : ControllerBase
             RefreshToken = refreshToken
         };
 
-        _context.TabUsers.Update(dbUser);
+        _context.Users.Update(dbUser);
         await _context.SaveChangesAsync();
 
         var subjects = await GetClaimsFromGraph(dbUser.UserId, me);
@@ -109,7 +107,7 @@ public class UserController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> RefreshTokens(TokenRequest request)
     {
-        var user = await _context.TabUsers.FindAsync(request.UserId);
+        var user = await _context.Users.FindAsync(request.UserId);
 
         // validate user RefreshToken
         if (user?.Email == null || request.RefreshToken != user.RefreshToken)
@@ -154,7 +152,7 @@ public class UserController : ControllerBase
     [HttpDelete("token")]
     public async Task<IActionResult> LogoutUser(TokenRequest request)
     {
-        var user = await _context.TabUsers.FindAsync(request.UserId);
+        var user = await _context.Users.FindAsync(request.UserId);
 
         // validate user RefreshToken
         if (user == null || request.RefreshToken != user.RefreshToken)
@@ -171,88 +169,24 @@ public class UserController : ControllerBase
     /// </summary>
     /// <returns>Jwt Bearer Token</returns>
     [HttpGet("login/pc")]
-    [Authorize(AuthenticationSchemes = NegotiateDefaults.AuthenticationScheme)]
-    public async Task<IActionResult> LoginByWinAuth()
+    public async Task<IActionResult> LoginComputers()
     {
-        if (HttpContext.User.Identity is not WindowsIdentity { IsAuthenticated: true } identity)
-            return BadRequest("You need to send NTML");
-
-        var subjects = new ClaimsIdentity(new[]
-        {
-            new Claim(JwtRegisteredClaimNames.Name, identity.Name)
-        });
-
-        if (identity.User != null && identity.User.Value is { } sid)
-            subjects.AddClaim(new Claim(JwtRegisteredClaimNames.Sub, sid));
-
-        if (_config["Dashboard:DomainSid"] is { } domainSid &&
-            ((identity.User != null && identity.User.IsEqualDomainSid(new SecurityIdentifier(domainSid))) ||
-             IsLocalAttribute.IsLocalRequest(HttpContext)))
-        {
-            var principal = new WindowsPrincipal(identity);
-            subjects.AddClaim(principal.IsInRole(new SecurityIdentifier(WellKnownSidType.AccountDomainAdminsSid,
-                new SecurityIdentifier(domainSid)))
-                ? new Claim(ClaimTypes.Role, "Admin")
-                : new Claim(ClaimTypes.Role, "Student"));
-        }
-        else // check certificate if user is not in domain
-        {
-            if (await HttpContext.Connection.GetClientCertificateAsync() is not
-                    { } clientCertificate || !ValidateClientCert(clientCertificate))
-                return BadRequest("Invalid Certificate");
-            subjects.AddClaim(new Claim(ClaimTypes.Role, "Guest"));
-        }
-
-        subjects.AddClaim(new Claim(ClaimTypes.Role, "Computer"));
-
-        var token = GenJwtToken(subjects);
+        if (await HttpContext.Connection.GetClientCertificateAsync() is not
+                { } clientCertificate || !CertificateUtils.ValidateClientCertificate(clientCertificate))
+            return BadRequest("Invalid Client Certificate");
+        
+        var claims = new ClaimsIdentity();
+        var token = GenJwtToken(claims);
         return token is null ? Unauthorized() : Ok(token);
     }
 
-    // https://stackoverflow.com/a/17225510/16871250
-    private bool ValidateClientCert(X509Certificate2 certificateToValidate)
+    private async Task<ClaimsIdentity> GetClaimsFromGraph(int id, Microsoft.Graph.Models.User graphUser)
     {
-        var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
-        store.Open(OpenFlags.ReadOnly);
-
-        if (_config["Dashboard:CASubject"] is not { } caSubject)
-            throw new Exception("No CASubject specified!");
-
-        var certs = store.Certificates.Find(X509FindType.FindBySubjectName, caSubject, false);
-        store.Close();
-
-        if (certs.Count < 1)
-            throw new Exception("No certificate found in Store!");
-
-        var authority = certs.First();
-
-        var chain = new X509Chain();
-        chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
-        chain.ChainPolicy.RevocationFlag = X509RevocationFlag.ExcludeRoot;
-        chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
-        chain.ChainPolicy.VerificationTime = DateTime.Now;
-        chain.ChainPolicy.UrlRetrievalTimeout = new TimeSpan(0, 0, 0);
-
-        chain.ChainPolicy.ExtraStore.Add(authority);
-
-        var isChainValid = chain.Build(certificateToValidate);
-
-        if (!isChainValid)
-            return false;
-
-        // Check if Thumbprints of Authority match
-        var valid = chain.ChainElements.Any(x => x.Certificate.Thumbprint == authority.Thumbprint);
-        return valid;
-    }
-
-    private async Task<ClaimsIdentity> GetClaimsFromGraph(int id, User graphUser)
-    {
-        var subjects = new ClaimsIdentity(new[]
-        {
+        var subjects = new ClaimsIdentity([
             new Claim(JwtRegisteredClaimNames.Name, graphUser.DisplayName!),
             new Claim(JwtRegisteredClaimNames.Sub, id.ToString()),
             new Claim(ClaimTypes.Email, graphUser.Mail!)
-        });
+        ]);
 
         if (graphUser.MemberOf is not { } groups)
             return subjects;
@@ -280,13 +214,13 @@ public class UserController : ControllerBase
 
         subjects.AddClaim(new Claim(ClaimTypes.Role, "Student"));
         
-        if (classGroups.IsNullOrEmpty())
+        if (classGroups.Count == 0)
             return subjects;
         
         var classIds = classGroups.Select(x => x.Id);
         
         // add ids of classes
-        foreach (var klasse in await _context.TabClasses.Where(dbClass => classIds.Contains(dbClass.AzureGroupId)).ToListAsync())
+        foreach (var klasse in await _context.Classes.Where(dbClass => classIds.Contains(dbClass.AzureGroupId)).ToListAsync())
             subjects.AddClaim(new Claim("class", klasse.ClassId.ToString()));
 
         return subjects;

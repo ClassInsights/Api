@@ -26,6 +26,6 @@ public class LogsController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetLogs()
     {
-        return Ok(await _context.TabLogs.ToListAsync());
+        return Ok(await _context.Logs.ToListAsync());
     }
 }

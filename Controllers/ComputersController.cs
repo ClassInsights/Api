@@ -35,7 +35,7 @@ public class ComputersController : ControllerBase
     public async Task<IActionResult> UpdateComputer(ApiModels.Computer computer)
     {
         if (HttpContext.User.Identity?.Name is { } name) computer.LastUser = name;
-        var tabComputer = _mapper.Map<TabComputer>(computer);
+        var tabComputer = _mapper.Map<Computer>(computer);
         _context.Update(tabComputer);
         await _context.SaveChangesAsync();
 
@@ -48,12 +48,12 @@ public class ComputersController : ControllerBase
     /// </summary>
     /// <param name="name">Name of Computer</param>
     /// <returns>
-    ///     <see cref="TabComputer" />
+    ///     <see cref="Computer" />
     /// </returns>
     [HttpGet("{name}")]
     public async Task<IActionResult> GetComputer(string name)
     {
-        if (await _context.TabComputers.FirstOrDefaultAsync(x => x.Name.Contains(name)) is { } computer)
+        if (await _context.Computers.FirstOrDefaultAsync(x => x.Name.Contains(name)) is { } computer)
             return Ok(_mapper.Map<ApiModels.Computer>(computer));
         return NotFound();
     }
@@ -79,8 +79,8 @@ public class ComputersController : ControllerBase
         await pcWebsocket.SendAsync(Encoding.UTF8.GetBytes(command).ToArray(), WebSocketMessageType.Text, true,
             CancellationToken.None);
 
-        var computer = await _context.TabComputers.FindAsync(computerId);
-        _context.TabLogs.Add(new TabLog
+        var computer = await _context.Computers.FindAsync(computerId);
+        _context.Logs.Add(new Log
         {
             Message = $"Send {command} to '{computer?.Name}' (Id: {computerId})",
             Username = HttpContext.User.FindFirst("name")?.Value ?? "No username found in Token",

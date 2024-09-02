@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Api.Models;
 
-public partial class TabLog
+public partial class Log
 {
     public long LogId { get; set; }
 

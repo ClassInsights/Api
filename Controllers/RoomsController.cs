@@ -1,7 +1,6 @@
 ﻿using Api.Attributes;
 using Api.Models;
 using AutoMapper;
-using InfluxDB.Client;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,15 +13,13 @@ namespace Api.Controllers;
 public class RoomsController : ControllerBase
 {
     private readonly ClassInsightsContext _context;
-    private readonly IConfiguration _config;
     private readonly IMapper _mapper;
 
     /// <inheritdoc />
-    public RoomsController(ClassInsightsContext context, IMapper mapper, IConfiguration config)
+    public RoomsController(ClassInsightsContext context, IMapper mapper)
     {
         _context = context;
         _mapper = mapper;
-        _config = config;
     }
 
     /// <summary>
@@ -36,7 +33,7 @@ public class RoomsController : ControllerBase
     public async Task<IActionResult> GetRoomByName(string roomName)
     {
         // room names in db must start with name DV and number e.g. DV206
-        var room = await _context.TabRooms.FirstOrDefaultAsync(x => x.Name != null && x.Name.Contains(roomName.Substring(0,3)));
+        var room = await _context.Rooms.FirstOrDefaultAsync(x => x.Name != null && x.Name.Contains(roomName.Substring(0,3)));
         return Ok(_mapper.Map<ApiModels.Room>(room));
     }
 
@@ -50,7 +47,7 @@ public class RoomsController : ControllerBase
     [HttpGet("{roomId:int}/computers")]
     public async Task<IActionResult> GetComputersInRoom(int roomId)
     {
-        var computers = await _context.TabComputers.Where(x => x.RoomId == roomId).ToListAsync();
+        var computers = await _context.Computers.Where(x => x.RoomId == roomId).ToListAsync();
         return Ok(_mapper.Map<List<ApiModels.Computer>>(computers));
     }
 
@@ -62,7 +59,7 @@ public class RoomsController : ControllerBase
     [HttpGet("{roomId:int}/lessons")]
     public async Task<IActionResult> GetLessonsInRoom(int roomId)
     {
-        var todayLessons = await _context.TabLessons
+        var todayLessons = await _context.Lessons
             .Where(x => x.RoomId == roomId && x.StartTime.HasValue && x.StartTime.Value.Date == DateTime.Today)
             .ToListAsync();
         return Ok(_mapper.Map<List<ApiModels.Lesson>>(todayLessons));
@@ -75,9 +72,9 @@ public class RoomsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetRooms()
     {
-        var rooms = await _context.TabRooms.Include(tabRoom => tabRoom.TabComputers)
-            .Where(tabRoom => tabRoom.TabComputers.Count > 0).Select(room =>
-                new ApiModels.Room(room.RoomId, room.Name!, room.LongName!, room.TabComputers.Count)).ToListAsync();
+        var rooms = await _context.Rooms.Include(tabRoom => tabRoom.Computers)
+            .Where(tabRoom => tabRoom.Computers.Count > 0).Select(room =>
+                new ApiModels.Room(room.RoomId, room.Name!, room.LongName!, room.Computers.Count)).ToListAsync();
         return Ok(rooms);
     }
 
@@ -91,47 +88,17 @@ public class RoomsController : ControllerBase
     [IsLocal]
     public async Task<IActionResult> AddOrDeleteRooms(List<ApiModels.Room> rooms)
     {
-        var dbRooms = await _context.TabRooms.ToListAsync();
+        var dbRooms = await _context.Rooms.ToListAsync();
         var newRooms = rooms
             .Where(room => dbRooms.All(dbRoom => room.RoomId != dbRoom.RoomId)).ToList();
 
         var oldRooms = dbRooms
             .Where(dbRoom => rooms.All(room => dbRoom.RoomId != room.RoomId)).ToList();
 
-        _context.TabRooms.AddRange(_mapper.Map<List<TabRoom>>(newRooms));
-        _context.TabRooms.RemoveRange(oldRooms);
+        _context.Rooms.AddRange(_mapper.Map<List<Room>>(newRooms));
+        _context.Rooms.RemoveRange(oldRooms);
 
         await _context.SaveChangesAsync();
         return Ok();
-    }
-
-    /// <summary>
-    ///     Find the values of the sensors in a specific Room
-    /// </summary>
-    /// <param name="sensorName">Name of Sensor</param>
-    /// <returns></returns>
-    [HttpGet("{sensorName}/sensors")]
-    public async Task<IActionResult> GetSensors(string sensorName)
-    {
-        if (_config["Dashboard:Influx:Query"] is not { } query || _config["Dashboard:Influx:Token"] is not { } token || _config["Dashboard:Influx:Server"] is not { } server || _config["Dashboard:Influx:Organisation"] is not { } organisation)
-            return NotFound("Missing config parameters!");
-        
-        using var influxDbClient = new InfluxDBClient(server, token);
-        
-        var fluxTables = await influxDbClient.GetQueryApi().QueryAsync(query.Replace("%SENSOR_TOPIC%", sensorName), organisation);
-        
-        var records = fluxTables.Select(fluxTable =>
-        {     
-            return fluxTable.Records.Select(x =>
-            {
-                var date = x.GetTimeInDateTime();
-                var field = x.GetField();
-                var value = x.GetValue();
-
-                return new { date, field, value };
-            }).MaxBy(x => x.date);
-        }).ToList();
-        
-        return Ok(records);
     }
 }

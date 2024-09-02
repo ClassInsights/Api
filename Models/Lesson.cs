@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Api.Models;
 
-public partial class TabLesson
+public partial class Lesson
 {
     public int LessonId { get; set; }
 
@@ -17,9 +17,9 @@ public partial class TabLesson
 
     public DateTime? EndTime { get; set; }
 
-    public virtual TabClass Class { get; set; } = null!;
+    public virtual Class Class { get; set; } = null!;
 
-    public virtual TabRoom Room { get; set; } = null!;
+    public virtual Room Room { get; set; } = null!;
 
-    public virtual TabSubject Subject { get; set; } = null!;
+    public virtual Subject Subject { get; set; } = null!;
 }

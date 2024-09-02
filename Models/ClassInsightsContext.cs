@@ -6,144 +6,188 @@ namespace Api.Models;
 
 public partial class ClassInsightsContext : DbContext
 {
+    public ClassInsightsContext()
+    {
+    }
+
     public ClassInsightsContext(DbContextOptions<ClassInsightsContext> options)
         : base(options)
     {
     }
 
-    public virtual DbSet<TabClass> TabClasses { get; set; }
+    public virtual DbSet<Class> Classes { get; set; }
 
-    public virtual DbSet<TabComputer> TabComputers { get; set; }
+    public virtual DbSet<Computer> Computers { get; set; }
 
-    public virtual DbSet<TabLesson> TabLessons { get; set; }
+    public virtual DbSet<Lesson> Lessons { get; set; }
 
-    public virtual DbSet<TabLog> TabLogs { get; set; }
+    public virtual DbSet<Log> Logs { get; set; }
 
-    public virtual DbSet<TabRoom> TabRooms { get; set; }
+    public virtual DbSet<Room> Rooms { get; set; }
 
-    public virtual DbSet<TabSubject> TabSubjects { get; set; }
+    public virtual DbSet<Subject> Subjects { get; set; }
 
-    public virtual DbSet<TabUser> TabUsers { get; set; }
-
+    public virtual DbSet<User> Users { get; set; }
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.UseCollation("Latin1_General_CI_AS");
-
-        modelBuilder.Entity<TabClass>(entity =>
+        modelBuilder.Entity<Class>(entity =>
         {
             entity.HasKey(e => e.ClassId).HasName("PK_tabClasses_1");
 
-            entity.ToTable("tabClass");
+            entity.ToTable("class");
 
             entity.Property(e => e.ClassId)
                 .ValueGeneratedNever()
-                .HasColumnName("ClassID");
+                .HasColumnName("class_id");
             entity.Property(e => e.AzureGroupId)
                 .HasMaxLength(50)
-                .HasColumnName("AzureGroupID");
-            entity.Property(e => e.Head).HasMaxLength(20);
-            entity.Property(e => e.Name).HasMaxLength(20);
+                .HasColumnName("azure_group_id");
+            entity.Property(e => e.Head)
+                .HasMaxLength(20)
+                .HasColumnName("head");
+            entity.Property(e => e.Name)
+                .HasMaxLength(20)
+                .HasColumnName("name");
         });
 
-        modelBuilder.Entity<TabComputer>(entity =>
+        modelBuilder.Entity<Computer>(entity =>
         {
             entity.HasKey(e => e.ComputerId).HasName("PK_tabComputers");
 
-            entity.ToTable("tabComputer");
+            entity.ToTable("computer");
 
-            entity.Property(e => e.ComputerId).HasColumnName("ComputerID");
-            entity.Property(e => e.IpAddress).HasMaxLength(50);
-            entity.Property(e => e.LastSeen).HasColumnType("datetime");
-            entity.Property(e => e.LastUser).HasMaxLength(75);
-            entity.Property(e => e.MacAddress).HasMaxLength(50);
-            entity.Property(e => e.Name).HasMaxLength(50);
-            entity.Property(e => e.RoomId).HasColumnName("RoomID");
-            entity.Property(e => e.Version).HasMaxLength(20);
+            entity.HasIndex(e => e.RoomId, "IX_tabComputer_RoomID");
 
-            entity.HasOne(d => d.Room).WithMany(p => p.TabComputers)
+            entity.Property(e => e.ComputerId).HasColumnName("computer_id");
+            entity.Property(e => e.IpAddress)
+                .HasMaxLength(50)
+                .HasColumnName("ip_address");
+            entity.Property(e => e.LastSeen).HasColumnName("last_seen");
+            entity.Property(e => e.LastUser)
+                .HasMaxLength(75)
+                .HasColumnName("last_user");
+            entity.Property(e => e.MacAddress)
+                .HasMaxLength(50)
+                .HasColumnName("mac_address");
+            entity.Property(e => e.Name)
+                .HasMaxLength(50)
+                .HasColumnName("name");
+            entity.Property(e => e.RoomId).HasColumnName("room_id");
+            entity.Property(e => e.Version)
+                .HasMaxLength(20)
+                .HasColumnName("version");
+
+            entity.HasOne(d => d.Room).WithMany(p => p.Computers)
                 .HasForeignKey(d => d.RoomId)
                 .HasConstraintName("FK_tabComputers_tabRooms");
         });
 
-        modelBuilder.Entity<TabLesson>(entity =>
+        modelBuilder.Entity<Lesson>(entity =>
         {
             entity.HasKey(e => e.LessonId).HasName("PK_tabLessons_1");
 
-            entity.ToTable("tabLesson");
+            entity.ToTable("lesson");
 
-            entity.Property(e => e.LessonId).HasColumnName("LessonID");
-            entity.Property(e => e.ClassId).HasColumnName("ClassID");
-            entity.Property(e => e.EndTime).HasColumnType("datetime");
-            entity.Property(e => e.RoomId).HasColumnName("RoomID");
-            entity.Property(e => e.StartTime).HasColumnType("datetime");
-            entity.Property(e => e.SubjectId).HasColumnName("SubjectID");
+            entity.HasIndex(e => e.ClassId, "IX_tabLesson_ClassID");
 
-            entity.HasOne(d => d.Class).WithMany(p => p.TabLessons)
+            entity.HasIndex(e => e.RoomId, "IX_tabLesson_RoomID");
+
+            entity.HasIndex(e => e.SubjectId, "IX_tabLesson_SubjectID");
+
+            entity.Property(e => e.LessonId).HasColumnName("lesson_id");
+            entity.Property(e => e.ClassId).HasColumnName("class_id");
+            entity.Property(e => e.EndTime).HasColumnName("end_time");
+            entity.Property(e => e.RoomId).HasColumnName("room_id");
+            entity.Property(e => e.StartTime).HasColumnName("start_time");
+            entity.Property(e => e.SubjectId).HasColumnName("subject_id");
+
+            entity.HasOne(d => d.Class).WithMany(p => p.Lessons)
                 .HasForeignKey(d => d.ClassId)
                 .HasConstraintName("FK_tabLessons_tabClasses");
 
-            entity.HasOne(d => d.Room).WithMany(p => p.TabLessons)
+            entity.HasOne(d => d.Room).WithMany(p => p.Lessons)
                 .HasForeignKey(d => d.RoomId)
                 .HasConstraintName("FK_tabLessons_tabRooms");
 
-            entity.HasOne(d => d.Subject).WithMany(p => p.TabLessons)
+            entity.HasOne(d => d.Subject).WithMany(p => p.Lessons)
                 .HasForeignKey(d => d.SubjectId)
                 .HasConstraintName("FK_tabLessons_tabSubjects");
         });
 
-        modelBuilder.Entity<TabLog>(entity =>
+        modelBuilder.Entity<Log>(entity =>
         {
-            entity.HasKey(e => e.LogId);
+            entity.HasKey(e => e.LogId).HasName("PK_tabLog");
 
-            entity.ToTable("tabLog");
+            entity.ToTable("log");
 
-            entity.Property(e => e.LogId).HasColumnName("LogID");
-            entity.Property(e => e.Date).HasColumnType("datetime");
-            entity.Property(e => e.Message).HasMaxLength(50);
-            entity.Property(e => e.Username).HasMaxLength(50);
+            entity.Property(e => e.LogId).HasColumnName("log_id");
+            entity.Property(e => e.Date).HasColumnName("date");
+            entity.Property(e => e.Message)
+                .HasMaxLength(50)
+                .HasColumnName("message");
+            entity.Property(e => e.Username)
+                .HasMaxLength(50)
+                .HasColumnName("username");
         });
 
-        modelBuilder.Entity<TabRoom>(entity =>
+        modelBuilder.Entity<Room>(entity =>
         {
-            entity.HasKey(e => e.RoomId);
+            entity.HasKey(e => e.RoomId).HasName("PK_tabRoom");
 
-            entity.ToTable("tabRoom");
+            entity.ToTable("room");
 
             entity.Property(e => e.RoomId)
                 .ValueGeneratedNever()
-                .HasColumnName("RoomID");
-            entity.Property(e => e.LongName).HasMaxLength(100);
-            entity.Property(e => e.Name).HasMaxLength(20);
+                .HasColumnName("room_id");
+            entity.Property(e => e.LongName)
+                .HasMaxLength(100)
+                .HasColumnName("long_name");
+            entity.Property(e => e.Name)
+                .HasMaxLength(20)
+                .HasColumnName("name");
         });
 
-        modelBuilder.Entity<TabSubject>(entity =>
+        modelBuilder.Entity<Subject>(entity =>
         {
             entity.HasKey(e => e.SubjectId).HasName("PK_tabSubjects");
 
-            entity.ToTable("tabSubject");
+            entity.ToTable("subject");
 
             entity.Property(e => e.SubjectId)
                 .ValueGeneratedNever()
-                .HasColumnName("SubjectID");
-            entity.Property(e => e.LongName).HasMaxLength(100);
-            entity.Property(e => e.Name).HasMaxLength(50);
+                .HasColumnName("subject_id");
+            entity.Property(e => e.LongName)
+                .HasMaxLength(100)
+                .HasColumnName("long_name");
+            entity.Property(e => e.Name)
+                .HasMaxLength(50)
+                .HasColumnName("name");
         });
 
-        modelBuilder.Entity<TabUser>(entity =>
+        modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.UserId).HasName("PK_tabUsers");
 
-            entity.ToTable("tabUser");
+            entity.ToTable("user");
 
-            entity.Property(e => e.UserId).HasColumnName("UserID");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
             entity.Property(e => e.AzureUserId)
                 .HasMaxLength(75)
-                .HasColumnName("AzureUserID");
-            entity.Property(e => e.Email).HasMaxLength(100);
-            entity.Property(e => e.FirstName).HasMaxLength(100);
-            entity.Property(e => e.LastName).HasMaxLength(100);
-            entity.Property(e => e.LastSeen).HasColumnType("datetime");
-            entity.Property(e => e.RefreshToken).HasMaxLength(200);
+                .HasColumnName("azure_user_id");
+            entity.Property(e => e.Email)
+                .HasMaxLength(100)
+                .HasColumnName("email");
+            entity.Property(e => e.FirstName)
+                .HasMaxLength(100)
+                .HasColumnName("first_name");
+            entity.Property(e => e.LastName)
+                .HasMaxLength(100)
+                .HasColumnName("last_name");
+            entity.Property(e => e.LastSeen).HasColumnName("last_seen");
+            entity.Property(e => e.RefreshToken)
+                .HasMaxLength(200)
+                .HasColumnName("refresh_token");
         });
 
         OnModelCreatingPartial(modelBuilder);

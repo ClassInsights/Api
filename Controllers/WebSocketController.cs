@@ -121,7 +121,7 @@ public class WebSocketController : ControllerBase
             if (!(onlineWatch.Elapsed.TotalSeconds > 8))
                 continue;
             
-            var computer = await _context.TabComputers.FindAsync(heartbeat.ComputerId);
+            var computer = await _context.Computers.FindAsync(heartbeat.ComputerId);
             if (computer == null)
                 continue;
                 

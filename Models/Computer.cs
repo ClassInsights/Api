@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Api.Models;
 
-public partial class TabComputer
+public partial class Computer
 {
     public int ComputerId { get; set; }
 
@@ -21,5 +21,5 @@ public partial class TabComputer
 
     public string? Version { get; set; }
 
-    public virtual TabRoom Room { get; set; } = null!;
+    public virtual Room Room { get; set; } = null!;
 }

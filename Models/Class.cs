@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Api.Models;
 
-public partial class TabClass
+public partial class Class
 {
     public int ClassId { get; set; }
 
@@ -13,5 +13,5 @@ public partial class TabClass
 
     public string? AzureGroupId { get; set; }
 
-    public virtual ICollection<TabLesson> TabLessons { get; set; } = new List<TabLesson>();
+    public virtual ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();
 }

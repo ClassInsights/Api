@@ -29,7 +29,7 @@ public class LessonsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllLessons()
     {
-        var lessons = await _context.TabLessons.ToListAsync();
+        var lessons = await _context.Lessons.ToListAsync();
         return Ok(_mapper.Map<List<ApiModels.Lesson>>(lessons));
     }
 
@@ -46,13 +46,13 @@ public class LessonsController : ControllerBase
         if (!lessons.Any()) return Ok();
 
         // delete all lessons
-        await _context.TabLessons.ExecuteDeleteAsync();
+        await _context.Lessons.ExecuteDeleteAsync();
         
         // reset auto increment id
         await _context.Database.ExecuteSqlRawAsync("DBCC CHECKIDENT (tabLesson, RESEED, 0);");
 
         // add new lessons
-        await _context.TabLessons.AddRangeAsync(_mapper.Map<List<TabLesson>>(lessons));
+        await _context.Lessons.AddRangeAsync(_mapper.Map<List<Lesson>>(lessons));
         await _context.SaveChangesAsync();
 
         return Ok();

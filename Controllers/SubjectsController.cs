@@ -29,7 +29,7 @@ public class SubjectsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllSubjects()
     {
-        return Ok(_mapper.Map<List<ApiModels.Subject>>(await _context.TabSubjects.ToListAsync()));
+        return Ok(_mapper.Map<List<ApiModels.Subject>>(await _context.Subjects.ToListAsync()));
     }
 
     /// <summary>
@@ -42,7 +42,7 @@ public class SubjectsController : ControllerBase
     [HttpGet("{subjectId:int}")]
     public async Task<IActionResult> GetSubjectById(int subjectId)
     {
-        if (await _context.TabSubjects.FindAsync(subjectId) is not { } subject)
+        if (await _context.Subjects.FindAsync(subjectId) is not { } subject)
             return NotFound();
         return Ok(_mapper.Map<ApiModels.Subject>(subject));
     }
@@ -57,15 +57,15 @@ public class SubjectsController : ControllerBase
     [IsLocal]
     public async Task<IActionResult> AddOrDeleteSubjects(List<ApiModels.Subject> subjects)
     {
-        var dbSubjects = await _context.TabSubjects.ToListAsync();
+        var dbSubjects = await _context.Subjects.ToListAsync();
         var newSubjects = subjects
             .Where(subject => dbSubjects.All(dbSubject => subject.SubjectId != dbSubject.SubjectId)).ToList();
 
         var oldSubjects = dbSubjects
             .Where(dbSubject => subjects.All(subject => dbSubject.SubjectId != subject.SubjectId)).ToList();
 
-        _context.TabSubjects.AddRange(_mapper.Map<List<TabSubject>>(newSubjects));
-        _context.TabSubjects.RemoveRange(oldSubjects);
+        _context.Subjects.AddRange(_mapper.Map<List<Subject>>(newSubjects));
+        _context.Subjects.RemoveRange(oldSubjects);
 
         await _context.SaveChangesAsync();
         return Ok();
