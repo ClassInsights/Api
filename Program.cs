@@ -54,12 +54,10 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        //policy.AllowAnyOrigin();
+        policy.AllowAnyOrigin();
         policy.AllowAnyMethod();
         policy.AllowAnyHeader();
         policy.AllowCredentials();
-        policy.WithOrigins("https://classinsights.t-la.lokal", "http://localhost:3000", "https://admin.projekt.lokal");
-        //policy.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost");
     });
 });
 
