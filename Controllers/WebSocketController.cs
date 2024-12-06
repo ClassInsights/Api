@@ -1,9 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Text;
-using Api.Models;
+using Api.Models.Database;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using NodaTime;
 
 namespace Api.Controllers;
 
@@ -125,7 +126,7 @@ public class WebSocketController : ControllerBase
             if (computer == null)
                 continue;
                 
-            computer.LastSeen = DateTime.Now;
+            computer.LastSeen = SystemClock.Instance.GetCurrentInstant();
             await _context.SaveChangesAsync();
         }
         

@@ -1,5 +1,6 @@
 using Api.Attributes;
-using Api.Models;
+using Api.Models.Database;
+using Api.Models.Dto;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,11 +26,11 @@ public class SubjectsController : ControllerBase
     /// <summary>
     ///     Find all Subjects
     /// </summary>
-    /// <returns><see cref="List{T}" /> whose generic type argument is <see cref="ApiModels.Subject" /></returns>
+    /// <returns><see cref="List{T}" /> whose generic type argument is <see crefApiDto.SubjectDtoct" /></returns>
     [HttpGet]
     public async Task<IActionResult> GetAllSubjects()
     {
-        return Ok(_mapper.Map<List<ApiModels.Subject>>(await _context.Subjects.ToListAsync()));
+        return Ok(_mapper.Map<List<ApiDto.SubjectDto>>(await _context.Subjects.ToListAsync()));
     }
 
     /// <summary>
@@ -37,14 +38,14 @@ public class SubjectsController : ControllerBase
     /// </summary>
     /// <param name="subjectId">Id of Subject</param>
     /// <returns>
-    ///     <see cref="ApiModels.Subject" />
+    ///     <see crefApiDto.SubjectDtoct" />
     /// </returns>
     [HttpGet("{subjectId:int}")]
     public async Task<IActionResult> GetSubjectById(int subjectId)
     {
         if (await _context.Subjects.FindAsync(subjectId) is not { } subject)
             return NotFound();
-        return Ok(_mapper.Map<ApiModels.Subject>(subject));
+        return Ok(_mapper.Map<ApiDto.SubjectDto>(subject));
     }
 
     /// <summary>
@@ -55,7 +56,7 @@ public class SubjectsController : ControllerBase
     [HttpPost]
     [AllowAnonymous]
     [IsLocal]
-    public async Task<IActionResult> AddOrDeleteSubjects(List<ApiModels.Subject> subjects)
+    public async Task<IActionResult> AddOrDeleteSubjects(List<ApiDto.SubjectDto> subjects)
     {
         var dbSubjects = await _context.Subjects.ToListAsync();
         var newSubjects = subjects

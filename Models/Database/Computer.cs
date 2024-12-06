@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using NodaTime;
 
-namespace Api.Models;
+namespace Api.Models.Database;
 
 public partial class Computer
 {
-    public int ComputerId { get; set; }
+    public long ComputerId { get; set; }
 
-    public int RoomId { get; set; }
+    public long RoomId { get; set; }
 
     public string Name { get; set; } = null!;
 
@@ -15,7 +16,7 @@ public partial class Computer
 
     public string? IpAddress { get; set; }
 
-    public DateTime LastSeen { get; set; }
+    public Instant LastSeen { get; set; }
 
     public string? LastUser { get; set; }
 

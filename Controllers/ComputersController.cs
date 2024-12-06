@@ -1,10 +1,12 @@
 ﻿using System.Net.WebSockets;
 using System.Text;
-using Api.Models;
+using Api.Models.Database;
+using Api.Models.Dto;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 
 namespace Api.Controllers;
 
@@ -26,21 +28,21 @@ public class ComputersController : ControllerBase
     /// <summary>
     ///     Adds or updates a Computer
     /// </summary>
-    /// <param name="computer">New computer</param>
+    /// <param name="computerDto">New computer</param>
     /// <returns>
-    ///     <see cref="ApiModels.Computer" />
+    ///     <see crefApiDto.ComputerDtoer" />
     /// </returns>
     [HttpPost]
     [Authorize(Roles = "Computer")]
-    public async Task<IActionResult> UpdateComputer(ApiModels.Computer computer)
+    public async Task<IActionResult> UpdateComputer(ApiDto.ComputerDto computerDto)
     {
-        if (HttpContext.User.Identity?.Name is { } name) computer.LastUser = name;
-        var tabComputer = _mapper.Map<Computer>(computer);
+        if (HttpContext.User.Identity?.Name is { } name) computerDto.LastUser = name;
+        var tabComputer = _mapper.Map<Computer>(computerDto);
         _context.Update(tabComputer);
         await _context.SaveChangesAsync();
 
         // map tabComputer to receive new ComputerId if it was created
-        return Ok(_mapper.Map<ApiModels.Computer>(tabComputer));
+        return Ok(_mapper.Map<ApiDto.ComputerDto>(tabComputer));
     }
 
     /// <summary>
@@ -54,7 +56,7 @@ public class ComputersController : ControllerBase
     public async Task<IActionResult> GetComputer(string name)
     {
         if (await _context.Computers.FirstOrDefaultAsync(x => x.Name.Contains(name)) is { } computer)
-            return Ok(_mapper.Map<ApiModels.Computer>(computer));
+            return Ok(_mapper.Map<ApiDto.ComputerDto>(computer));
         return NotFound();
     }
 
@@ -84,7 +86,7 @@ public class ComputersController : ControllerBase
         {
             Message = $"Send {command} to '{computer?.Name}' (Id: {computerId})",
             Username = HttpContext.User.FindFirst("name")?.Value ?? "No username found in Token",
-            Date = DateTime.Now
+            Date = SystemClock.Instance.GetCurrentInstant()
         });
         await _context.SaveChangesAsync();
         return Ok();

@@ -1,9 +1,9 @@
-﻿namespace Api;
+﻿namespace Api.Models.Dto;
 
 /// <summary>
 ///     DTO Models for Api requests and responses
 /// </summary>
-public class ApiModels
+public class ApiDto
 {
     /// <summary>
     ///     Class object
@@ -12,7 +12,7 @@ public class ApiModels
     /// <param name="Name">Name of Class</param>
     /// <param name="Head">Head of Class</param>
     /// <param name="AzureGroupId">Id of Group in AzureAd</param>
-    public class Class
+    public class ClassDto
     {
         /// <summary>Id of Class</summary>
         public int? ClassId { get; set; }
@@ -36,12 +36,12 @@ public class ApiModels
     /// <param name="ClassId">Id of Class</param>
     /// <param name="StartTime">Lesson begin</param>
     /// <param name="EndTime">Lesson end</param>
-    public record Lesson(int LessonId, int RoomId, int SubjectId, int ClassId, DateTime? StartTime, DateTime? EndTime);
+    public record LessonDto(int LessonId, int RoomId, int SubjectId, int ClassId, DateTime? StartTime, DateTime? EndTime);
 
     /// <summary>
     ///     Computer object
     /// </summary>
-    public class Computer
+    public class ComputerDto
     {
         /// <summary>Id of Computer</summary>
         public int ComputerId { get; set; }
@@ -80,7 +80,7 @@ public class ApiModels
     /// <param name="Name">Name of Room</param>
     /// <param name="LongName">Fullname of Room</param>
     /// <param name="DeviceCount">Count of Computers inside of Room</param>
-    public record Room(int RoomId, string Name, string LongName, int? DeviceCount);
+    public record RoomDto(long RoomId, string DisplayName, int? DeviceCount);
 
     /// <summary>
     ///     Subject object
@@ -88,12 +88,12 @@ public class ApiModels
     /// <param name="SubjectId">Id of Subject</param>
     /// <param name="Name">Name of Subject</param>
     /// <param name="LongName">Fullname of Subject</param>
-    public record Subject(int SubjectId, string Name, string LongName);
+    public record SubjectDto(int SubjectId, string Name, string LongName);
 
     /// <summary>
     ///     SchoolYear object
     /// </summary>
-    public class SchoolYear
+    public class SchoolYearDto
     {
         /// <summary>
         ///     SchoolYear object
@@ -101,7 +101,7 @@ public class ApiModels
         /// <param name="name">Name of SchoolYear</param>
         /// <param name="startDate">StartDate of SchoolYear</param>
         /// <param name="endDate">EndDate of SchoolYear</param>
-        public SchoolYear(string name, DateTime startDate, DateTime endDate)
+        public SchoolYearDto(string name, DateTime startDate, DateTime endDate)
         {
             Name = name;
             StartDate = startDate;

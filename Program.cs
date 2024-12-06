@@ -1,12 +1,11 @@
 using System.Threading.RateLimiting;
 using Api;
-using Api.Models;
+using Api.Models.Database;
+using Api.Services;
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Graph.Models.ExternalConnectors;
-using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,11 +15,13 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerConfiguration();
 
-// register own services
-builder.Services.AddDbContext<ClassInsightsContext>(options =>
-{
-    options.UseNpgsql(builder.Configuration.GetConnectionString("npgsql"));
+// Add database connection
+builder.Services.AddDbContext<ClassInsightsContext>(options => {
+    options.UseNpgsql(builder.Configuration.GetConnectionString("npgsql"), o => o.UseNodaTime());
 });
+
+// Add Settings Service
+builder.Services.AddSingleton(new SettingsService());
 
 // register authentications
 var authentication = builder.Services.AddAuthentication(c =>
@@ -37,17 +38,11 @@ builder.Services.Configure<RouteOptions>(options => { options.LowercaseUrls = tr
 
 builder.Services.AddAuthorization();
 
-// Add Microsoft Graph
-builder.Services.AddAuthentication()
-    .AddMicrosoftIdentityWebApp(builder.Configuration)
-    .EnableTokenAcquisitionToCallDownstreamApi()
-    .AddMicrosoftGraph()
-    .AddInMemoryTokenCaches();
+// Auto Mapper
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// Auto Mapper Configurations
-var mapperConfig = new MapperConfiguration(mc => { mc.AddProfile(new MappingProfile()); });
-
-builder.Services.AddSingleton(mapperConfig.CreateMapper());
+// Update Untis Data regularly
+builder.Services.AddHostedService<UntisService>();
 
 // Enable CORS
 builder.Services.AddCors(options =>
@@ -57,7 +52,6 @@ builder.Services.AddCors(options =>
         policy.AllowAnyOrigin();
         policy.AllowAnyMethod();
         policy.AllowAnyHeader();
-        policy.AllowCredentials();
     });
 });
 
@@ -87,8 +81,15 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline and Swagger
+// Apply migrations at startup
+if (app.Environment.IsProduction())
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<ClassInsightsContext>();
+    dbContext.Database.Migrate();
+}
 
+// Configure the HTTP request pipeline and Swagger
 app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())

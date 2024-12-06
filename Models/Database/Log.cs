@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using NodaTime;
 
-namespace Api.Models;
+namespace Api.Models.Database;
 
 public partial class Log
 {
@@ -11,5 +12,5 @@ public partial class Log
 
     public string Username { get; set; } = null!;
 
-    public DateTime Date { get; set; }
+    public Instant Date { get; set; }
 }

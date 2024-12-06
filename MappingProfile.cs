@@ -1,4 +1,5 @@
-﻿using Api.Models;
+﻿using Api.Models.Database;
+using Api.Models.Dto;
 using AutoMapper;
 
 namespace Api;
@@ -9,12 +10,15 @@ public class MappingProfile : Profile
     /// <inheritdoc />
     public MappingProfile()
     {
-        CreateMap<ApiModels.Room, Room>();
-        CreateMap<ApiModels.Class, Class>().ReverseMap();
-        CreateMap<ApiModels.Lesson, Lesson>().ReverseMap();
-        CreateMap<ApiModels.Subject, Subject>().ReverseMap();
-        CreateMap<ApiModels.Computer, Computer>().ReverseMap();
-        CreateMap<Room, ApiModels.Room>()
-            .ConstructUsing(x => new ApiModels.Room(x.RoomId, x.Name!, x.LongName!, null));
+        CreateMap<MasterDataObjectDto, Room>().ForMember(dest => dest.RoomId, opt => opt.MapFrom(src => src.Id));
+        CreateMap<MasterDataObjectDto, Subject>().ForMember(dest => dest.SubjectId, opt => opt.MapFrom(src => src.Id));
+        CreateMap<MasterDataObjectDto, Class>().ForMember(dest => dest.ClassId, opt => opt.MapFrom(src => src.Id));
+        CreateMap<ApiDto.RoomDto, Room>();
+        CreateMap<ApiDto.ClassDto, Class>().ReverseMap();
+        CreateMap<ApiDto.LessonDto, Lesson>().ReverseMap();
+        CreateMap<ApiDto.SubjectDto, Subject>().ReverseMap();
+        CreateMap<ApiDto.ComputerDto, Computer>().ReverseMap();
+        CreateMap<Room, ApiDto.RoomDto>()
+            .ConstructUsing(x => new ApiDto.RoomDto(x.RoomId, x.DisplayName!, null));
     }
 }

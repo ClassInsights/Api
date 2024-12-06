@@ -1,9 +1,11 @@
 ﻿using Api.Attributes;
-using Api.Models;
+using Api.Models.Database;
+using Api.Models.Dto;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 
 namespace Api.Controllers;
 
@@ -27,14 +29,14 @@ public class RoomsController : ControllerBase
     /// </summary>
     /// <param name="roomName">Name of room</param>
     /// <returns>
-    ///     <see cref="ApiModels.Room" />
+    ///     <see crefApiDto.RoomDtoom" />
     /// </returns>
     [HttpGet("{roomName}")]
     public async Task<IActionResult> GetRoomByName(string roomName)
     {
         // room names in db must start with name DV and number e.g. DV206
-        var room = await _context.Rooms.FirstOrDefaultAsync(x => x.Name != null && x.Name.Contains(roomName.Substring(0,3)));
-        return Ok(_mapper.Map<ApiModels.Room>(room));
+        var room = await _context.Rooms.FirstOrDefaultAsync(x => x.DisplayName != null && x.DisplayName.Contains(roomName.Substring(0,3)));
+        return Ok(_mapper.Map<ApiDto.RoomDto>(room));
     }
 
     /// <summary>
@@ -42,39 +44,44 @@ public class RoomsController : ControllerBase
     /// </summary>
     /// <param name="roomId">Id of room</param>
     /// <returns>
-    ///     <see cref="ApiModels.Computer" />
+    ///     <see crefApiDto.ComputerDtoer" />
     /// </returns>
     [HttpGet("{roomId:int}/computers")]
     public async Task<IActionResult> GetComputersInRoom(int roomId)
     {
         var computers = await _context.Computers.Where(x => x.RoomId == roomId).ToListAsync();
-        return Ok(_mapper.Map<List<ApiModels.Computer>>(computers));
+        return Ok(_mapper.Map<List<ApiDto.ComputerDto>>(computers));
     }
 
     /// <summary>
     ///     Find all Lessons in a Room
     /// </summary>
     /// <param name="roomId">Id of room</param>
-    /// <returns><see cref="List{T}" /> whose generic type argument is <see cref="ApiModels.Lesson" /></returns>
+    /// <returns><see cref="List{T}" /> whose generic type argument is <see crefApiDto.LessonDtoon" /></returns>
     [HttpGet("{roomId:int}/lessons")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetLessonsInRoom(int roomId)
     {
+        var tz = DateTimeZoneProviders.Bcl.GetSystemDefault();
+        var today = SystemClock.Instance.GetCurrentInstant().InZone(tz).Date;
+        
+        
         var todayLessons = await _context.Lessons
-            .Where(x => x.RoomId == roomId && x.StartTime.HasValue && x.StartTime.Value.Date == DateTime.Today)
+            .Where(x => x.RoomId == roomId && x.Start.HasValue && x.Start.Value.InZone(tz).Date == today)
             .ToListAsync();
-        return Ok(_mapper.Map<List<ApiModels.Lesson>>(todayLessons));
+        return Ok(_mapper.Map<List<ApiDto.LessonDto>>(todayLessons));
     }
 
     /// <summary>
     ///     Find all available rooms
     /// </summary>
-    /// <returns><see cref="List{T}" /> whose generic type argument is <see cref="ApiModels.Room" /></returns>
+    /// <returns><see cref="List{T}" /> whose generic type argument is <see crefApiDto.RoomDtoom" /></returns>
     [HttpGet]
     public async Task<IActionResult> GetRooms()
     {
         var rooms = await _context.Rooms.Include(tabRoom => tabRoom.Computers)
             .Where(tabRoom => tabRoom.Computers.Count > 0).Select(room =>
-                new ApiModels.Room(room.RoomId, room.Name!, room.LongName!, room.Computers.Count)).ToListAsync();
+                new ApiDto.RoomDto(room.RoomId, room.DisplayName!, room.Computers.Count)).ToListAsync();
         return Ok(rooms);
     }
 
@@ -86,7 +93,7 @@ public class RoomsController : ControllerBase
     [HttpPost]
     [AllowAnonymous]
     [IsLocal]
-    public async Task<IActionResult> AddOrDeleteRooms(List<ApiModels.Room> rooms)
+    public async Task<IActionResult> AddOrDeleteRooms(List<ApiDto.RoomDto> rooms)
     {
         var dbRooms = await _context.Rooms.ToListAsync();
         var newRooms = rooms

@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Api.Models;
+namespace Api.Models.Database;
 
 public partial class Class
 {
-    public int ClassId { get; set; }
+    public long ClassId { get; set; }
 
-    public string Name { get; set; } = null!;
-
-    public string Head { get; set; } = null!;
+    public string DisplayName { get; set; } = null!;
 
     public string? AzureGroupId { get; set; }
 

@@ -2,14 +2,10 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
-namespace Api.Models;
+namespace Api.Models.Database;
 
 public partial class ClassInsightsContext : DbContext
 {
-    public ClassInsightsContext()
-    {
-    }
-
     public ClassInsightsContext(DbContextOptions<ClassInsightsContext> options)
         : base(options)
     {
@@ -28,7 +24,7 @@ public partial class ClassInsightsContext : DbContext
     public virtual DbSet<Subject> Subjects { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
-    
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Class>(entity =>
@@ -43,12 +39,9 @@ public partial class ClassInsightsContext : DbContext
             entity.Property(e => e.AzureGroupId)
                 .HasMaxLength(50)
                 .HasColumnName("azure_group_id");
-            entity.Property(e => e.Head)
+            entity.Property(e => e.DisplayName)
                 .HasMaxLength(20)
-                .HasColumnName("head");
-            entity.Property(e => e.Name)
-                .HasMaxLength(20)
-                .HasColumnName("name");
+                .HasColumnName("display_name");
         });
 
         modelBuilder.Entity<Computer>(entity =>
@@ -97,9 +90,9 @@ public partial class ClassInsightsContext : DbContext
 
             entity.Property(e => e.LessonId).HasColumnName("lesson_id");
             entity.Property(e => e.ClassId).HasColumnName("class_id");
-            entity.Property(e => e.EndTime).HasColumnName("end_time");
+            entity.Property(e => e.End).HasColumnName("end");
             entity.Property(e => e.RoomId).HasColumnName("room_id");
-            entity.Property(e => e.StartTime).HasColumnName("start_time");
+            entity.Property(e => e.Start).HasColumnName("start");
             entity.Property(e => e.SubjectId).HasColumnName("subject_id");
 
             entity.HasOne(d => d.Class).WithMany(p => p.Lessons)
@@ -140,12 +133,9 @@ public partial class ClassInsightsContext : DbContext
             entity.Property(e => e.RoomId)
                 .ValueGeneratedNever()
                 .HasColumnName("room_id");
-            entity.Property(e => e.LongName)
+            entity.Property(e => e.DisplayName)
                 .HasMaxLength(100)
-                .HasColumnName("long_name");
-            entity.Property(e => e.Name)
-                .HasMaxLength(20)
-                .HasColumnName("name");
+                .HasColumnName("display_name");
         });
 
         modelBuilder.Entity<Subject>(entity =>
@@ -157,12 +147,9 @@ public partial class ClassInsightsContext : DbContext
             entity.Property(e => e.SubjectId)
                 .ValueGeneratedNever()
                 .HasColumnName("subject_id");
-            entity.Property(e => e.LongName)
+            entity.Property(e => e.DisplayName)
                 .HasMaxLength(100)
-                .HasColumnName("long_name");
-            entity.Property(e => e.Name)
-                .HasMaxLength(50)
-                .HasColumnName("name");
+                .HasColumnName("display_name");
         });
 
         modelBuilder.Entity<User>(entity =>

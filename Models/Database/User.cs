@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using NodaTime;
 
-namespace Api.Models;
+namespace Api.Models.Database;
 
 public partial class User
 {
@@ -17,5 +18,5 @@ public partial class User
 
     public string? RefreshToken { get; set; }
 
-    public DateTime? LastSeen { get; set; }
+    public Instant? LastSeen { get; set; }
 }
