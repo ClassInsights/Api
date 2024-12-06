@@ -136,6 +136,9 @@ public partial class ClassInsightsContext : DbContext
             entity.Property(e => e.DisplayName)
                 .HasMaxLength(100)
                 .HasColumnName("display_name");
+            entity.Property(e => e.Regex)
+                .HasMaxLength(100)
+                .HasColumnName("regex");
         });
 
         modelBuilder.Entity<Subject>(entity =>

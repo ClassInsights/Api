@@ -1,4 +1,5 @@
-﻿using Api.Models.Database;
+﻿using System.Text.RegularExpressions;
+using Api.Models.Database;
 using Api.Models.Dto;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
@@ -32,8 +33,8 @@ public class RoomsController : ControllerBase
     [HttpGet("{roomName}")]
     public async Task<IActionResult> GetRoomByName(string roomName)
     {
-        // room names in db must start with name DV and number e.g. DV206
-        var room = await _context.Rooms.FirstOrDefaultAsync(x => x.DisplayName != null && x.DisplayName.Contains(roomName.Substring(0,3)));
+        // computer name must contain room name 
+        var room = await _context.Rooms.FirstOrDefaultAsync(x => x.DisplayName != null && (x.Regex != null ? Regex.IsMatch(roomName, x.Regex) : roomName.Contains(x.DisplayName)));
         return Ok(_mapper.Map<ApiDto.RoomDto>(room));
     }
 
