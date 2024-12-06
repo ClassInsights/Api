@@ -165,16 +165,13 @@ public partial class ClassInsightsContext : DbContext
             entity.Property(e => e.Email)
                 .HasMaxLength(100)
                 .HasColumnName("email");
-            entity.Property(e => e.FirstName)
-                .HasMaxLength(100)
-                .HasColumnName("first_name");
-            entity.Property(e => e.LastName)
-                .HasMaxLength(100)
-                .HasColumnName("last_name");
             entity.Property(e => e.LastSeen).HasColumnName("last_seen");
             entity.Property(e => e.RefreshToken)
                 .HasMaxLength(200)
                 .HasColumnName("refresh_token");
+            entity.Property(e => e.Username)
+                .HasMaxLength(100)
+                .HasColumnName("username");
         });
 
         OnModelCreatingPartial(modelBuilder);

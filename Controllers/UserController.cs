@@ -3,9 +3,11 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Api.Models.Database;
+using Api.Models.Dto;
 using Api.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using NodaTime;
 
 namespace Api.Controllers;
 
@@ -46,18 +48,57 @@ public class UserController : ControllerBase
         return Ok();
     }
 
+    [HttpPost("user")]
+    public async Task<IActionResult> LoginUser(string token)
+    {
+        using var client = new HttpClient();
+        
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+        var response = await client.GetAsync("https://classinsights.at/api/userinfo");
+        
+        if (!response.IsSuccessStatusCode) return Unauthorized();
+        
+        var userDto = await response.Content.ReadFromJsonAsync<ApiDto.UserDto>();
+        if (userDto == null)
+            return Unauthorized();
+        
+        
+        var refreshToken = GenerateRefreshToken();
+
+        _context.Users.Update(new User
+        {
+            AzureUserId = userDto.AzureUserId,
+            Email = userDto.Email,
+            Username = userDto.Username,
+            RefreshToken = refreshToken,
+            LastSeen = SystemClock.Instance.GetCurrentInstant()
+        });
+        
+        await _context.SaveChangesAsync();
+
+        var accessToken = GenJwtToken(new ClaimsIdentity());
+        
+        return Ok(new
+        {
+            access_token = accessToken,
+            refresh_token = refreshToken
+        });
+    }
+
     /// <summary>
     ///     Login Endpoint for Computers
     /// </summary>
     /// <returns>Jwt Bearer Token</returns>
     [HttpGet("login/pc")]
-    public async Task<IActionResult> LoginComputers()
+    public async Task<IActionResult> LoginComputer()
     {
         if (await HttpContext.Connection.GetClientCertificateAsync() is not
                 { } clientCertificate || !CertificateUtils.ValidateClientCertificate(clientCertificate))
             return BadRequest("Invalid Client Certificate");
         
         var claims = new ClaimsIdentity();
+        claims.AddClaim(new Claim(ClaimTypes.Role, "Computer"));
+        
         var token = GenJwtToken(claims);
         return token is null ? Unauthorized() : Ok(token);
     }

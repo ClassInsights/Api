@@ -5,6 +5,9 @@
 /// </summary>
 public class ApiDto
 {
+    
+    public record UserDto(long? UserId, string AzureUserId, string Email, string Username);
+    
     /// <summary>
     ///     Class object
     /// </summary>
@@ -18,10 +21,7 @@ public class ApiDto
         public int? ClassId { get; set; }
 
         /// <summary>Name of Class</summary>
-        public string? Name { get; set; }
-
-        /// <summary>Head of Class</summary>
-        public string? Head { get; set; }
+        public string? DisplayName { get; set; }
 
         /// <summary>Id of Group in AzureAd</summary>
         public string? AzureGroupId { get; set; }
