@@ -1,8 +1,6 @@
-﻿using Api.Attributes;
-using Api.Models.Database;
+﻿using Api.Models.Database;
 using Api.Models.Dto;
 using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
@@ -59,7 +57,6 @@ public class RoomsController : ControllerBase
     /// <param name="roomId">Id of room</param>
     /// <returns><see cref="List{T}" /> whose generic type argument is <see crefApiDto.LessonDtoon" /></returns>
     [HttpGet("{roomId:int}/lessons")]
-    [AllowAnonymous]
     public async Task<IActionResult> GetLessonsInRoom(int roomId)
     {
         var tz = DateTimeZoneProviders.Bcl.GetSystemDefault();
@@ -83,29 +80,5 @@ public class RoomsController : ControllerBase
             .Where(tabRoom => tabRoom.Computers.Count > 0).Select(room =>
                 new ApiDto.RoomDto(room.RoomId, room.DisplayName!, room.Computers.Count)).ToListAsync();
         return Ok(rooms);
-    }
-
-    /// <summary>
-    ///     Adds or deletes Rooms
-    /// </summary>
-    /// <param name="rooms">List of Rooms</param>
-    /// <returns></returns>
-    [HttpPost]
-    [AllowAnonymous]
-    [IsLocal]
-    public async Task<IActionResult> AddOrDeleteRooms(List<ApiDto.RoomDto> rooms)
-    {
-        var dbRooms = await _context.Rooms.ToListAsync();
-        var newRooms = rooms
-            .Where(room => dbRooms.All(dbRoom => room.RoomId != dbRoom.RoomId)).ToList();
-
-        var oldRooms = dbRooms
-            .Where(dbRoom => rooms.All(room => dbRoom.RoomId != room.RoomId)).ToList();
-
-        _context.Rooms.AddRange(_mapper.Map<List<Room>>(newRooms));
-        _context.Rooms.RemoveRange(oldRooms);
-
-        await _context.SaveChangesAsync();
-        return Ok();
     }
 }
