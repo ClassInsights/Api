@@ -62,7 +62,6 @@ public class RoomsController : ControllerBase
         var tz = DateTimeZoneProviders.Bcl.GetSystemDefault();
         var today = SystemClock.Instance.GetCurrentInstant().InZone(tz).Date;
         
-        
         var todayLessons = await _context.Lessons
             .Where(x => x.RoomId == roomId && x.Start.HasValue && x.Start.Value.InZone(tz).Date == today)
             .ToListAsync();

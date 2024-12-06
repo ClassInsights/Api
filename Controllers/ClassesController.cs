@@ -1,6 +1,7 @@
 ﻿using Api.Models.Database;
 using Api.Models.Dto;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -42,7 +43,7 @@ public class ClassesController : ControllerBase
     /// </summary>
     /// <param name="patchDocument">New values for Class</param>
     /// <returns></returns>
-    [HttpPatch]
+    [HttpPatch, AllowAnonymous]
     public async Task<IActionResult> UpdateClass(JsonPatchDocument<List<ApiDto.ClassDto>>? patchDocument)
     {
         var classes = await _context.Classes.AsNoTracking().ToListAsync();

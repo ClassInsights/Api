@@ -2,15 +2,15 @@ using System.Threading.RateLimiting;
 using Api;
 using Api.Models.Database;
 using Api.Services;
-using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllers().AddNewtonsoftJson();
+
+// Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerConfiguration();
@@ -41,8 +41,11 @@ builder.Services.AddAuthorization();
 // Auto Mapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// Update Untis Data regularly
-builder.Services.AddHostedService<UntisService>();
+if (builder.Environment.IsProduction())
+{
+    // Update Untis Data regularly
+    builder.Services.AddHostedService<UntisService>();
+}
 
 // Enable CORS
 builder.Services.AddCors(options =>
@@ -90,8 +93,6 @@ if (app.Environment.IsProduction())
 }
 
 // Configure the HTTP request pipeline and Swagger
-app.UseRateLimiter();
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -101,7 +102,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseStaticFiles();
+app.UseRateLimiter();
 
 app.UseHttpsRedirection();
 
