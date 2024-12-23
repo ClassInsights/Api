@@ -19,7 +19,7 @@ public class ConfigController : ControllerBase
     {
         var rawConfig = await System.IO.File.ReadAllTextAsync("appsettings.json");
         var jsonConfig = JObject.Parse(rawConfig);
-        
+
         return Ok(jsonConfig["Dashboard"]?.ToString(Formatting.Indented));
     }
 

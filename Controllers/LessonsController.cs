@@ -9,26 +9,16 @@ namespace Api.Controllers;
 /// <inheritdoc />
 [Route("api/[controller]")]
 [ApiController]
-public class LessonsController : ControllerBase
+public class LessonsController(ClassInsightsContext context, IMapper mapper) : ControllerBase
 {
-    private readonly ClassInsightsContext _context;
-    private readonly IMapper _mapper;
-
-    /// <inheritdoc />
-    public LessonsController(ClassInsightsContext context, IMapper mapper)
-    {
-        _context = context;
-        _mapper = mapper;
-    }
-
     /// <summary>
     ///     Find all available Lessons
     /// </summary>
-    /// <returns><see cref="List{T}" /> whose generic type argument is <see crefApiDto.LessonDtoon" /></returns>
+    /// <returns><see cref="List{T}" /> whose generic type argument is <see cref="ApiDto.LessonDto" /></returns>
     [HttpGet]
     public async Task<IActionResult> GetAllLessons()
     {
-        var lessons = await _context.Lessons.ToListAsync();
-        return Ok(_mapper.Map<List<ApiDto.LessonDto>>(lessons));
+        var lessons = await context.Lessons.AsNoTracking().ToListAsync();
+        return Ok(mapper.Map<List<ApiDto.LessonDto>>(lessons));
     }
 }

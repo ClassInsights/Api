@@ -5,10 +5,9 @@ namespace Api.Models.Dto;
 
 public class TokenDto
 {
-    [JsonPropertyName("access_token")]
-    public string AccessToken { get; set; } = null!;
-    [JsonPropertyName("token_type")]
-    public string TokenType { get; set; } = null!;
+    [JsonPropertyName("access_token")] public string AccessToken { get; set; } = null!;
+
+    [JsonPropertyName("token_type")] public string TokenType { get; set; } = null!;
 }
 
 public class Error
@@ -87,13 +86,33 @@ public class MasterDataDto
     public List<TeacherDto>? Teachers { get; set; }
 }
 
-public class ClassDto : MasterDataObjectDto { }
-public class DepartmentDto : MasterDataObjectDto { }
-public class RoomDto : MasterDataObjectDto { }
-public class StudentGroupDto : MasterDataObjectDto { }
-public class StudentDto : MasterDataObjectDto { }
-public class SubjectDto : MasterDataObjectDto { }
-public class TeacherDto : MasterDataObjectDto { }
+public class ClassDto : MasterDataObjectDto
+{
+}
+
+public class DepartmentDto : MasterDataObjectDto
+{
+}
+
+public class RoomDto : MasterDataObjectDto
+{
+}
+
+public class StudentGroupDto : MasterDataObjectDto
+{
+}
+
+public class StudentDto : MasterDataObjectDto
+{
+}
+
+public class SubjectDto : MasterDataObjectDto
+{
+}
+
+public class TeacherDto : MasterDataObjectDto
+{
+}
 
 public class MasterDataObjectDto
 {
@@ -163,6 +182,7 @@ public class ResourceRefDto
     public string Discriminator { get; set; } = null!;
     public long Id { get; set; } = default!;
 }
+
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum PeriodTypeEnum
 {
@@ -175,6 +195,7 @@ public enum PeriodTypeEnum
     EVENT,
     MEETING
 }
+
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum PeriodStatusEnum
 {
@@ -183,6 +204,7 @@ public enum PeriodStatusEnum
     ADDED,
     CHANGED
 }
+
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ResourceStatusEnum
 {

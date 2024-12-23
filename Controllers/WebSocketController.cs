@@ -10,30 +10,22 @@ namespace Api.Controllers;
 
 /// <inheritdoc />
 [ApiExplorerSettings(IgnoreApi = true)] // ignore in swagger
-public class WebSocketController : ControllerBase
+public class WebSocketController(ClassInsightsContext context) : ControllerBase
 {
-    private readonly ClassInsightsContext _context;
-
-    /// <inheritdoc />
-    public WebSocketController(ClassInsightsContext context)
-    {
-        _context = context;
-    }
-
     /// <summary>
-    /// Dictionary of all client WebSockets for a computer
+    ///     Dictionary of all client WebSockets for a computer
     /// </summary>
     private static readonly Dictionary<int, List<WebSocket>> AppWebSockets = new();
 
     /// <summary>
-    /// Dictionary of all connected PcWebSockets
+    ///     Dictionary of all connected ComputerWebSockets
     /// </summary>
     public static readonly Dictionary<int, WebSocket> ComputerWebSockets = new();
-    
+
     /// <summary>
-    ///     Returns power and usage information of Pc
+    ///     Returns power and usage information of Computer
     /// </summary>
-    /// <param name="computerId">Id of Pc</param>
+    /// <param name="computerId">ID of Computer</param>
     [Route("/ws/computers/{computerId:int}")]
     public async Task GetComputerInformation(int computerId)
     {
@@ -42,19 +34,19 @@ public class WebSocketController : ControllerBase
             HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
             return;
         }
-        
+
         using var clientWebSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
         if (!AppWebSockets.ContainsKey(computerId))
-            AppWebSockets[computerId] = new List<WebSocket>();
-        
+            AppWebSockets[computerId] = [];
+
         AppWebSockets[computerId].Add(clientWebSocket);
-        
+
         // while connection is alive
         while (!clientWebSocket.CloseStatus.HasValue) await Task.Delay(500); // keep websocket alive
 
         // remove ws from list if client disconnects
         AppWebSockets[computerId].Remove(clientWebSocket);
-        
+
         // close connection because client has disconnected
         await HandleCloseAsync(clientWebSocket);
     }
@@ -72,21 +64,22 @@ public class WebSocketController : ControllerBase
         }
 
         using var computerWebSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-        
+
         var sendWatch = new Stopwatch();
         var onlineWatch = new Stopwatch();
         sendWatch.Start();
         onlineWatch.Start();
 
         Heartbeat? lastHeartbeat = null;
-        while (!computerWebSocket.CloseStatus.HasValue) {
+        while (!computerWebSocket.CloseStatus.HasValue)
+        {
             // wait min 500ms after each send 
             if (sendWatch.Elapsed.TotalMilliseconds < 500)
             {
-                await Task.Delay(Math.Abs((int) (500 - sendWatch.Elapsed.TotalMilliseconds)));
+                await Task.Delay(Math.Abs((int)(500 - sendWatch.Elapsed.TotalMilliseconds)));
                 sendWatch.Restart();
             }
-            
+
             // read text from socket
             var input = await ReadTextAsync(computerWebSocket);
 
@@ -121,15 +114,15 @@ public class WebSocketController : ControllerBase
             // update LastSeen all 8 seconds
             if (!(onlineWatch.Elapsed.TotalSeconds > 8))
                 continue;
-            
-            var computer = await _context.Computers.FindAsync(heartbeat.ComputerId);
+
+            var computer = await context.Computers.FindAsync(heartbeat.ComputerId);
             if (computer == null)
                 continue;
-                
+
             computer.LastSeen = SystemClock.Instance.GetCurrentInstant();
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
         }
-        
+
         // remove ws from Dictionary
         if (lastHeartbeat != null) ComputerWebSockets.Remove(lastHeartbeat.ComputerId);
 
@@ -177,5 +170,11 @@ public class WebSocketController : ControllerBase
     }
 
     private record Heartbeat(int ComputerId, string Type, string Name, int Room, DateTime UpTime, Data? Data);
-    private record Data(float Power, float RamUsage, List<float>? CpuUsage, List<float>? DiskUsages, List<Dictionary<string, float>>? EthernetUsages);
+
+    private record Data(
+        float Power,
+        float RamUsage,
+        List<float>? CpuUsage,
+        List<float>? DiskUsages,
+        List<Dictionary<string, float>>? EthernetUsages);
 }

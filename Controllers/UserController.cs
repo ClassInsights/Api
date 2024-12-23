@@ -1,10 +1,10 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 using Api.Models.Database;
 using Api.Models.Dto;
-using Api.Utils;
+using Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using NodaTime;
@@ -14,98 +14,90 @@ namespace Api.Controllers;
 /// <inheritdoc />
 [Route("api/")]
 [ApiController]
-public class UserController : ControllerBase
+public class UserController(IConfiguration config, SettingsService settingsService, ClassInsightsContext context) : ControllerBase
 {
-    private readonly IConfiguration _config;
-    private readonly ClassInsightsContext _context;
-
-    /// <inheritdoc />
-    public UserController(IConfiguration config, ClassInsightsContext context)
-    {
-        _config = config;
-        _context = context;
-    }
-
     /// <summary>
-    ///     Revokes the RefreshToken of the User
+    ///     Logs user out
     /// </summary>
-    /// <param name="request">
-    ///     <see cref="TokenRequest" />
-    /// </param>
     /// <returns></returns>
-    [HttpDelete("token")]
-    public async Task<IActionResult> LogoutUser(TokenRequest request)
+    [HttpDelete("user")]
+    public async Task<IActionResult> LogoutUser()
     {
-        var user = await _context.Users.FindAsync(request.UserId);
-
-        // validate user RefreshToken
-        if (user == null || request.RefreshToken != user.RefreshToken)
+        var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(id))
             return Unauthorized();
 
-        _context.Remove(user);
-        await _context.SaveChangesAsync();
+        var user = await context.Users.FindAsync(id);
+        if (user == null)
+            return Ok();
+
+        context.Remove(user);
+        await context.SaveChangesAsync();
 
         return Ok();
     }
 
-    [HttpPost("user")]
-    public async Task<IActionResult> LoginUser(string token)
+    [HttpPost("user"), AllowAnonymous]
+    public async Task<IActionResult> LoginUser()
     {
-        using var client = new HttpClient();
+        Request.Headers.TryGetValue("Authorization", out var authorization);
+        var token = authorization.FirstOrDefault();
         
+        if (string.IsNullOrEmpty(token))
+            return Unauthorized();
+        
+        using var client = new HttpClient();
+
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
         var response = await client.GetAsync("https://classinsights.at/api/userinfo");
-        
+
         if (!response.IsSuccessStatusCode) return Unauthorized();
-        
+
         var userDto = await response.Content.ReadFromJsonAsync<ApiDto.UserDto>();
         if (userDto == null)
             return Unauthorized();
         
-        
-        var refreshToken = GenerateRefreshToken();
-
-        _context.Users.Update(new User
+        context.Users.Update(new User
         {
             AzureUserId = userDto.AzureUserId,
             Email = userDto.Email,
             Username = userDto.Username,
-            RefreshToken = refreshToken,
             LastSeen = SystemClock.Instance.GetCurrentInstant()
         });
-        
-        await _context.SaveChangesAsync();
+
+        await context.SaveChangesAsync();
 
         var accessToken = GenJwtToken(new ClaimsIdentity());
-        
+
         return Ok(new
         {
-            access_token = accessToken,
-            refresh_token = refreshToken
+            access_token = accessToken
         });
     }
 
     /// <summary>
-    ///     Login Endpoint for Computers
+    ///     Login endpoint for computers
     /// </summary>
     /// <returns>Jwt Bearer Token</returns>
-    [HttpGet("login/pc")]
+    [HttpGet("login/computer"), AllowAnonymous]
     public async Task<IActionResult> LoginComputer()
     {
-        if (await HttpContext.Connection.GetClientCertificateAsync() is not
-                { } clientCertificate || !CertificateUtils.ValidateClientCertificate(clientCertificate))
-            return BadRequest("Invalid Client Certificate");
+        Request.Headers.TryGetValue("Authorization", out var authorization);
+        var computerToken = authorization.FirstOrDefault();
+        
+        if (string.IsNullOrEmpty(computerToken) || computerToken != config["ComputerToken"])
+            return Unauthorized();
         
         var claims = new ClaimsIdentity();
         claims.AddClaim(new Claim(ClaimTypes.Role, "Computer"));
-        
-        var token = GenJwtToken(claims);
-        return token is null ? Unauthorized() : Ok(token);
+
+        var token = await GenJwtToken(claims);
+        return token == null ? Unauthorized() : Ok(token);
     }
 
-    private string? GenJwtToken(ClaimsIdentity subject)
+    private async Task<string?> GenJwtToken(ClaimsIdentity subject)
     {
-        var key = _config["Jwt:Key"];
+        var key = await settingsService.GetSettingAsync("JwtKey");
         if (key is null)
             return null;
 
@@ -113,8 +105,7 @@ public class UserController : ControllerBase
         {
             Subject = subject,
             Expires = DateTime.UtcNow.AddDays(2),
-            Issuer = _config["Jwt:Issuer"],
-            Audience = _config["Jwt:Audience"],
+            Issuer = "ClassInsights",
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
                 SecurityAlgorithms.HmacSha256)
         };
@@ -124,19 +115,4 @@ public class UserController : ControllerBase
 
         return tokenHandler.WriteToken(token);
     }
-
-    private static string GenerateRefreshToken()
-    {
-        var randomNumber = new byte[64];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(randomNumber);
-        return Convert.ToBase64String(randomNumber);
-    }
-
-    /// <summary>
-    ///     Request model for Token refresh
-    /// </summary>
-    /// <param name="UserId">Id of user which is associated with RefreshToken</param>
-    /// <param name="RefreshToken">RefreshToken of User</param>
-    public record TokenRequest(int UserId, string RefreshToken);
 }

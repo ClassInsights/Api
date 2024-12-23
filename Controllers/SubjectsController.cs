@@ -6,43 +6,32 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Api.Controllers;
 
-/// <inheritdoc />
 [Route("api/[controller]")]
 [ApiController]
-public class SubjectsController : ControllerBase
+public class SubjectsController(ClassInsightsContext context, IMapper mapper) : ControllerBase
 {
-    private readonly ClassInsightsContext _context;
-    private readonly IMapper _mapper;
-
-    /// <inheritdoc />
-    public SubjectsController(ClassInsightsContext context, IMapper mapper)
-    {
-        _context = context;
-        _mapper = mapper;
-    }
-
     /// <summary>
-    ///     Find all Subjects
+    ///     Find all subjects
     /// </summary>
-    /// <returns><see cref="List{T}" /> whose generic type argument is <see crefApiDto.SubjectDtoct" /></returns>
+    /// <returns><see cref="List{T}" /> whose generic type argument is <see cref="ApiDto.SubjectDto" /></returns>
     [HttpGet]
     public async Task<IActionResult> GetAllSubjects()
     {
-        return Ok(_mapper.Map<List<ApiDto.SubjectDto>>(await _context.Subjects.ToListAsync()));
+        return Ok(mapper.Map<List<ApiDto.SubjectDto>>(await context.Subjects.ToListAsync()));
     }
 
     /// <summary>
-    ///     Find specific Subject by Id
+    ///     Find specific subject by ID
     /// </summary>
-    /// <param name="subjectId">Id of Subject</param>
+    /// <param name="subjectId">ID of subject</param>
     /// <returns>
-    ///     <see crefApiDto.SubjectDtoct" />
+    ///     <see cref="ApiDto.SubjectDto" />
     /// </returns>
     [HttpGet("{subjectId:int}")]
     public async Task<IActionResult> GetSubjectById(int subjectId)
     {
-        if (await _context.Subjects.FindAsync(subjectId) is not { } subject)
+        if (await context.Subjects.FindAsync(subjectId) is not { } subject)
             return NotFound();
-        return Ok(_mapper.Map<ApiDto.SubjectDto>(subject));
+        return Ok(mapper.Map<ApiDto.SubjectDto>(subject));
     }
 }

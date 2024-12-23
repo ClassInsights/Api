@@ -4,10 +4,8 @@ using AutoMapper;
 
 namespace Api;
 
-/// <inheritdoc />
 public class MappingProfile : Profile
 {
-    /// <inheritdoc />
     public MappingProfile()
     {
         CreateMap<MasterDataObjectDto, Room>().ForMember(dest => dest.RoomId, opt => opt.MapFrom(src => src.Id));

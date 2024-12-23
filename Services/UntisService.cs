@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using System.Text.Json;
 using Api.Models.Database;
 using Api.Models.Dto;
@@ -10,11 +11,16 @@ using NodaTime.Serialization.SystemTextJson;
 
 namespace Api.Services;
 
-public class UntisService(ILogger<UntisService> logger, SettingsService settingsService, IMapper mapper, IServiceScopeFactory serviceScope, IConfiguration configuration): BackgroundService
+public class UntisService(
+    ILogger<UntisService> logger,
+    SettingsService settingsService,
+    IMapper mapper,
+    IServiceScopeFactory serviceScope,
+    IConfiguration configuration) : BackgroundService
 {
-    private TokenDto? _tokenResponse;
     private readonly object _lock = new();
-    
+    private TokenDto? _tokenResponse;
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         logger.LogInformation("UntisService is running");
@@ -32,20 +38,31 @@ public class UntisService(ILogger<UntisService> logger, SettingsService settings
         }
     }
 
-    private async Task UpdateUntisRecords()
+    public async Task UpdateUntisRecords(bool force = false)
     {
         try
         {
-            var timetable = await GetTimetableAsync();
+            await using var scope = serviceScope.CreateAsyncScope();
+            var context = scope.ServiceProvider.GetRequiredService<ClassInsightsContext>();
+
+            TimetableDto? timetable;
+
+            if (force || !await context.Rooms.AsNoTracking().AnyAsync())
+                // get timetable for all rooms 
+                timetable = await GetTimetableAsync();
+            else
+            {
+                // get timetable for classinsights rooms
+                timetable = await GetTimetableAsync(await context.Rooms.AsNoTracking().Where(x => x.Computers.Count > 0).Select(x => x.RoomId).ToArrayAsync());
+            }
 
             if (timetable.HeaderData is { SchoolYearEnd: { } endDate, SchoolYearStart: { } startDate })
             {
-                await settingsService.SetSettingAsync("SchoolYearStart", startDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
-                await settingsService.SetSettingAsync("SchoolYearEnd", endDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+                await settingsService.SetSettingAsync("SchoolYearStart",
+                    startDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+                await settingsService.SetSettingAsync("SchoolYearEnd",
+                    endDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
             }
-            
-            await using var scope = serviceScope.CreateAsyncScope();
-            var context = scope.ServiceProvider.GetRequiredService<ClassInsightsContext>();
             
             // update classes, rooms and subjects
             await UpdateMasterDataAsync(timetable, context);
@@ -54,24 +71,24 @@ public class UntisService(ILogger<UntisService> logger, SettingsService settings
             {
                 var tz = DateTimeZoneProviders.Tzdb.GetSystemDefault();
                 await context.Lessons.ExecuteDeleteAsync();
-                
+
                 List<Lesson> lessons = (from period in periods
                     where period.Status is PeriodStatusEnum.REGULAR or PeriodStatusEnum.ADDED
-                from classDto in period.Classes
-                from subjects in period.Subjects
-                from room in period.Rooms
-                select new Lesson
-                {
-                    ClassId = classDto.Id,
-                    SubjectId = subjects.Id,
-                    RoomId = room.Id,
-                    Start = period.Start.InZoneLeniently(tz).ToInstant(),
-                    End = period.End.InZoneLeniently(tz).ToInstant()
-                }).Distinct().ToList();
-                
+                    from classDto in period.Classes
+                    from subjects in period.Subjects
+                    from room in period.Rooms
+                    select new Lesson
+                    {
+                        ClassId = classDto.Id,
+                        SubjectId = subjects.Id,
+                        RoomId = room.Id,
+                        Start = period.Start.InZoneLeniently(tz).ToInstant(),
+                        End = period.End.InZoneLeniently(tz).ToInstant()
+                    }).Distinct().ToList();
+
                 context.Lessons.AddRange(lessons);
             }
-            
+
             await context.SaveChangesAsync();
         }
         catch (Exception e)
@@ -93,7 +110,7 @@ public class UntisService(ILogger<UntisService> logger, SettingsService settings
             var dbSubjects = mapper.Map<List<Subject>>(subjects);
             await context.BulkInsertOrUpdateAsync(dbSubjects);
         }
-        
+
         if (timetable.MasterData.Classes is { Count: > 0 } classes)
         {
             var dbClasses = mapper.Map<List<Class>>(classes);
@@ -101,19 +118,21 @@ public class UntisService(ILogger<UntisService> logger, SettingsService settings
         }
     }
     
-    private async Task<TimetableDto> GetTimetableAsync()
+    private async Task<TimetableDto> GetTimetableAsync(long[]? roomIds = null)
     {
-        var response = await CallApiEndpointAsync("https://classinsights.at/api/untis/timetable", HttpMethod.Get);
-        
+        var response = await CallApiEndpointAsync("https://classinsights.at/api/untis/timetable" + (roomIds == null ? "" : $"?room={string.Join("&room=", roomIds)}"), HttpMethod.Get);
+
         response.EnsureSuccessStatusCode();
-        
+
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
         options.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
 
-        return await response.Content.ReadFromJsonAsync<TimetableDto>(options) ?? throw new NullReferenceException("Timetable response is null");
+        return await response.Content.ReadFromJsonAsync<TimetableDto>(options) ??
+               throw new NullReferenceException("Timetable response is null");
     }
-    
-    private async Task<HttpResponseMessage> CallApiEndpointAsync(string endpoint, HttpMethod method, HttpContent? content = null)
+
+    private async Task<HttpResponseMessage> CallApiEndpointAsync(string endpoint, HttpMethod method,
+        HttpContent? content = null)
     {
         for (var i = 0; i < 3; i++)
         {
@@ -125,10 +144,14 @@ public class UntisService(ILogger<UntisService> logger, SettingsService settings
 
             var response = await client.SendAsync(request);
 
-            if (response.StatusCode != System.Net.HttpStatusCode.Unauthorized) return response;
+            if (response.StatusCode != HttpStatusCode.Unauthorized) return response;
             logger.LogWarning("Access token expired. Retrying...");
-            lock (_lock) _tokenResponse = null; // Force re-authentication
+            lock (_lock)
+            {
+                _tokenResponse = null; // Force re-authentication
+            }
         }
+
         throw new HttpRequestException("Credentials invalid");
     }
 
@@ -136,18 +159,15 @@ public class UntisService(ILogger<UntisService> logger, SettingsService settings
     {
         lock (_lock)
         {
-            if (_tokenResponse != null)
-            {
-                return _tokenResponse.AccessToken;
-            }
+            if (_tokenResponse != null) return _tokenResponse.AccessToken;
         }
 
         var newAuthResponse = await AuthenticateAsync();
         lock (_lock)
-        {   
+        {
             _tokenResponse = newAuthResponse;
         }
-        
+
         return _tokenResponse.AccessToken;
     }
 
@@ -155,19 +175,19 @@ public class UntisService(ILogger<UntisService> logger, SettingsService settings
     {
         if (configuration["License"] is not { } license)
             throw new InvalidOperationException("License is not configured");
-        
+
         logger.LogInformation("Fetching new Access Token");
         using var client = new HttpClient();
 
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {license}");
         var response = await client.PostAsync("https://classinsights.at/api/login", null);
-        
+
         response.EnsureSuccessStatusCode();
-        
+
         var authToken = await response.Content.ReadFromJsonAsync<TokenDto>();
         if (authToken == null || string.IsNullOrEmpty(authToken.AccessToken))
             throw new NullReferenceException("Access token is null");
-        
+
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
         options.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
 

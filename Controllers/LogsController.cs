@@ -8,16 +8,8 @@ namespace Api.Controllers;
 /// <inheritdoc />
 [Route("api/[controller]")]
 [ApiController]
-public class LogsController : ControllerBase
+public class LogsController(ClassInsightsContext context) : ControllerBase
 {
-    private readonly ClassInsightsContext _context;
-
-    /// <inheritdoc />
-    public LogsController(ClassInsightsContext context)
-    {
-        _context = context;
-    }
-
     /// <summary>
     ///     Find all Logs
     /// </summary>
@@ -26,6 +18,6 @@ public class LogsController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetLogs()
     {
-        return Ok(await _context.Logs.ToListAsync());
+        return Ok(await context.Logs.AsNoTracking().ToListAsync());
     }
 }

@@ -4,9 +4,9 @@ namespace Api.Services;
 
 public class SettingsService
 {
+    private readonly SemaphoreSlim _cacheLock = new(1, 1);
     private readonly string _filePath;
     private readonly Dictionary<string, string> _settingsCache;
-    private readonly SemaphoreSlim _cacheLock = new(1, 1);
 
     public SettingsService(string filePath = "settings.json")
     {
@@ -14,7 +14,8 @@ public class SettingsService
 
         // Load settings into the cache during initialization
         _settingsCache = File.Exists(_filePath)
-            ? JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(_filePath)) ?? new Dictionary<string, string>()
+            ? JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(_filePath)) ??
+              new Dictionary<string, string>()
             : new Dictionary<string, string>();
     }
 
