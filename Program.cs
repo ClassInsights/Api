@@ -113,13 +113,13 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
         options.ClientCertificateMode = ClientCertificateMode.AllowCertificate;
     });
 
-    serverOptions.ListenAnyIP(7061, listenOptions =>
+    /*serverOptions.ListenAnyIP(7061, listenOptions =>
     {// todo: create ssl cert depending on domain
         if (!File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "ssl.pfx")))
             CertificateUtils.SaveCertificate(CertificateUtils.CreateClientCertificate("ClassInsights"), "ssl.pfx");
 
         listenOptions.UseHttps("ssl.pfx");
-    });
+    });*/
 });
 
 // Configure Rate Limits
