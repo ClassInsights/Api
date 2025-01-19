@@ -45,6 +45,7 @@ builder.Services.AddAuthentication(c =>
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
+        ValidateAudience = false,
         ValidIssuer = "ClassInsights",
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
     };
@@ -74,7 +75,7 @@ builder.Services.AddSwaggerGen(options =>
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
         Scheme = "Bearer",
-        Description = "Please enter a valid token",
+        Description = "Please enter a valid token"
     });
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
