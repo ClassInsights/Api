@@ -53,7 +53,10 @@ public class UntisService(
             else
             {
                 // get timetable for classinsights rooms
-                timetable = await GetTimetableAsync(await context.Rooms.AsNoTracking().Where(x => x.Computers.Count > 0).Select(x => x.RoomId).ToArrayAsync());
+                var roomIds = await context.Rooms.AsNoTracking().Where(x => x.Computers.Count > 0).Select(x => x.RoomId).ToArrayAsync();
+                if (roomIds.Length <= 0)
+                    return; // don't request timetable if classinsights isn't installed anywhere
+                timetable = await GetTimetableAsync(roomIds);
             }
 
             if (timetable.HeaderData is { SchoolYearEnd: { } endDate, SchoolYearStart: { } startDate })
@@ -63,7 +66,7 @@ public class UntisService(
                 await settingsService.SetSettingAsync("SchoolYearEnd",
                     endDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
             }
-            
+
             // update classes, rooms and subjects
             await UpdateMasterDataAsync(timetable, context);
 
