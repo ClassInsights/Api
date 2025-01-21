@@ -1,4 +1,6 @@
-﻿namespace Api.Models.Dto;
+﻿using NodaTime;
+
+namespace Api.Models.Dto;
 
 /// <summary>
 ///     DTO Models for Api requests and responses
@@ -40,8 +42,8 @@ public class ApiDto
         int RoomId,
         int SubjectId,
         int ClassId,
-        DateTime? StartTime,
-        DateTime? EndTime);
+        Instant? StartTime,
+        Instant? EndTime);
 
     /// <summary>
     ///     Computer object
@@ -67,7 +69,7 @@ public class ApiDto
         public string? LastUser { get; set; }
 
         /// <summary>Last time of Heartbeat</summary>
-        public DateTime LastSeen { get; set; }
+        public Instant LastSeen { get; set; }
 
         /// <summary>Version of ClassInsights Client</summary>
         public string? Version { get; set; }
@@ -75,7 +77,7 @@ public class ApiDto
         /// <summary>
         ///     Online state of Computer
         /// </summary>
-        public bool Online => LastSeen > DateTime.Now.AddSeconds(-10);
+        public bool Online => LastSeen > SystemClock.Instance.GetCurrentInstant().Minus(Duration.FromSeconds(10));
     }
 
     /// <summary>
@@ -106,7 +108,7 @@ public class ApiDto
         /// <param name="name">Name of SchoolYear</param>
         /// <param name="startDate">StartDate of SchoolYear</param>
         /// <param name="endDate">EndDate of SchoolYear</param>
-        public SchoolYearDto(string name, DateTime startDate, DateTime endDate)
+        public SchoolYearDto(string name, Instant startDate, Instant endDate)
         {
             Name = name;
             StartDate = startDate;
@@ -117,9 +119,9 @@ public class ApiDto
         public string Name { get; set; }
 
         /// <summary>StartDate of SchoolYear</summary>
-        public DateTime StartDate { get; set; }
+        public Instant StartDate { get; set; }
 
         /// <summary>EndDate of SchoolYear</summary>
-        public DateTime EndDate { get; set; }
+        public Instant EndDate { get; set; }
     }
 }

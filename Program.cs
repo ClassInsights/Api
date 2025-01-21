@@ -10,10 +10,12 @@ using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using NodaTime;
+using NodaTime.Serialization.SystemTextJson;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers().AddNewtonsoftJson();
+builder.Services.AddControllers().AddNewtonsoftJson().AddJsonOptions(options => options.JsonSerializerOptions.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb));
 
 // Add database connection
 builder.Services.AddDbContext<ClassInsightsContext>(options =>
@@ -113,7 +115,7 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
     {
         options.ClientCertificateMode = ClientCertificateMode.AllowCertificate;
     });
-
+    
     /*serverOptions.ListenAnyIP(7061, listenOptions =>
     {// todo: create ssl cert depending on domain
         if (!File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "ssl.pfx")))
