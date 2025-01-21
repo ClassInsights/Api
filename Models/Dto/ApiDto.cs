@@ -19,7 +19,7 @@ public class ApiDto
     public class ClassDto
     {
         /// <summary>Id of Class</summary>
-        public int? ClassId { get; set; }
+        public long? ClassId { get; set; }
 
         /// <summary>Name of Class</summary>
         public string? DisplayName { get; set; }
@@ -38,10 +38,10 @@ public class ApiDto
     /// <param name="Start">Lesson begin</param>
     /// <param name="End">Lesson end</param>
     public record LessonDto(
-        int LessonId,
-        int RoomId,
-        int SubjectId,
-        int ClassId,
+        long LessonId,
+        long RoomId,
+        long SubjectId,
+        long ClassId,
         Instant? Start,
         Instant? End);
 
@@ -51,10 +51,10 @@ public class ApiDto
     public class ComputerDto
     {
         /// <summary>Id of Computer</summary>
-        public int ComputerId { get; set; }
+        public long ComputerId { get; set; }
 
         /// <summary>Id of Room</summary>
-        public int RoomId { get; set; }
+        public long RoomId { get; set; }
 
         /// <summary>Name of Computer</summary>
         public string Name { get; set; }
@@ -95,7 +95,7 @@ public class ApiDto
     /// <param name="SubjectId">Id of Subject</param>
     /// <param name="Name">Name of Subject</param>
     /// <param name="LongName">Fullname of Subject</param>
-    public record SubjectDto(int SubjectId, string Name, string LongName);
+    public record SubjectDto(long SubjectId, string Name, string LongName);
 
     /// <summary>
     ///     SchoolYear object

@@ -15,12 +15,12 @@ public class WebSocketController(ClassInsightsContext context) : ControllerBase
     /// <summary>
     ///     Dictionary of all client WebSockets for a computer
     /// </summary>
-    private static readonly Dictionary<int, List<WebSocket>> AppWebSockets = new();
+    private static readonly Dictionary<long, List<WebSocket>> AppWebSockets = new();
 
     /// <summary>
     ///     Dictionary of all connected ComputerWebSockets
     /// </summary>
-    public static readonly Dictionary<int, WebSocket> ComputerWebSockets = new();
+    public static readonly Dictionary<long, WebSocket> ComputerWebSockets = new();
 
     /// <summary>
     ///     Returns power and usage information of Computer
@@ -169,7 +169,7 @@ public class WebSocketController(ClassInsightsContext context) : ControllerBase
                 CancellationToken.None);
     }
 
-    private record Heartbeat(int ComputerId, string Type, string Name, int Room, DateTime UpTime, Data? Data);
+    private record Heartbeat(long ComputerId, string Type, string Name, int Room, DateTime UpTime, Data? Data);
 
     private record Data(
         float Power,
