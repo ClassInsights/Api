@@ -35,15 +35,15 @@ public class ApiDto
     /// <param name="RoomId">Id of Room</param>
     /// <param name="SubjectId">Id of Subject</param>
     /// <param name="ClassId">Id of Class</param>
-    /// <param name="StartTime">Lesson begin</param>
-    /// <param name="EndTime">Lesson end</param>
+    /// <param name="Start">Lesson begin</param>
+    /// <param name="End">Lesson end</param>
     public record LessonDto(
         int LessonId,
         int RoomId,
         int SubjectId,
         int ClassId,
-        Instant? StartTime,
-        Instant? EndTime);
+        Instant? Start,
+        Instant? End);
 
     /// <summary>
     ///     Computer object
