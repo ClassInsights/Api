@@ -1,10 +1,10 @@
 ﻿using Api.Models.Database;
 using Api.Models.Dto;
 using AutoMapper;
-using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
+using SystemTextJsonPatch;
 
 namespace Api.Controllers;
 
@@ -47,7 +47,7 @@ public class ClassesController(ClassInsightsContext context, IMapper mapper) : C
             return NotFound();
         
         var modelClass = mapper.Map<ApiDto.ClassDto>(dbClass);
-        patchDocument.ApplyTo(modelClass, ModelState);
+        patchDocument.ApplyTo(modelClass);
 
         context.Update(mapper.Map<Class>(modelClass));
         await context.SaveChangesAsync();

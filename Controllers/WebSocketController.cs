@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using Api.Models.Database;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using NodaTime;
 
 namespace Api.Controllers;
@@ -88,7 +88,7 @@ public class WebSocketController(ClassInsightsContext context) : ControllerBase
                 return;
 
             // deserialize to object
-            var heartbeat = JsonConvert.DeserializeObject<Heartbeat>(input);
+            var heartbeat = JsonSerializer.Deserialize<Heartbeat>(input);
 
             // check if valid heartbeat object
             if (heartbeat is null)
@@ -107,7 +107,7 @@ public class WebSocketController(ClassInsightsContext context) : ControllerBase
                 // send information of computer to all connected clients
                 var sendInformationTasks = (from appWebsocket in appWebsockets
                     where appWebsocket.State == WebSocketState.Open
-                    select SendTextAsync(JsonConvert.SerializeObject(heartbeat), appWebsocket)).ToList();
+                    select SendTextAsync(JsonSerializer.Serialize(heartbeat), appWebsocket)).ToList();
                 await Task.WhenAll(sendInformationTasks);
             }
 
