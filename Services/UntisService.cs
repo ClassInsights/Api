@@ -105,7 +105,10 @@ public class UntisService(
         if (timetable.MasterData.Rooms is { Count: > 0 } rooms)
         {
             var dbRooms = mapper.Map<List<Room>>(rooms);
-            await context.BulkInsertOrUpdateAsync(dbRooms);
+            await context.BulkInsertOrUpdateAsync(dbRooms, config =>
+            {
+                config.PropertiesToExclude = [nameof(Room.Regex)];
+            });
         }
 
         if (timetable.MasterData.Subjects is { Count: > 0 } subjects)
