@@ -24,9 +24,7 @@ public class RoomsController(ClassInsightsContext context, UntisService untisSer
     [HttpGet("{roomName}")]
     public async Task<IActionResult> GetRoomByName(string roomName)
     {
-        var room = await context.Rooms.FirstOrDefaultAsync(x =>
-            x.DisplayName != null &&
-            (x.Regex != null ? Regex.IsMatch(roomName, x.Regex) : roomName.Contains(x.DisplayName)));
+        var room = await context.Rooms.FirstOrDefaultAsync(x => x.Regex != null && Regex.IsMatch(roomName, x.Regex));
         return Ok(mapper.Map<ApiDto.RoomDto>(room));
     }
 
