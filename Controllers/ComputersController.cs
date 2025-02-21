@@ -13,7 +13,7 @@ namespace Api.Controllers;
 /// <inheritdoc />
 [Route("api/[controller]")]
 [ApiController]
-public class ComputersController(ClassInsightsContext context, IMapper mapper) : ControllerBase
+public class ComputersController(IClock clock, ClassInsightsContext context, IMapper mapper) : ControllerBase
 {
     /// <summary>
     ///     Adds or updates a computer
@@ -75,7 +75,7 @@ public class ComputersController(ClassInsightsContext context, IMapper mapper) :
         {
             Message = $"Send {command} to '{computer?.Name}' (Id: {computerId})",
             Username = HttpContext.User.FindFirst("name")?.Value ?? "No username found in Token",
-            Date = SystemClock.Instance.GetCurrentInstant()
+            Date = clock.GetCurrentInstant()
         });
         await context.SaveChangesAsync();
         return Ok();

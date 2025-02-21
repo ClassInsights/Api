@@ -16,6 +16,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb));
 
+// Add clock instance
+builder.Services.AddSingleton<IClock>(SystemClock.Instance);
+
 // Add database connection
 builder.Services.AddDbContext<ClassInsightsContext>(options =>
 {

@@ -11,7 +11,7 @@ namespace Api.Controllers;
 /// <inheritdoc />
 [Route("api/[controller]")]
 [ApiController]
-public class ClassesController(ClassInsightsContext context, IMapper mapper) : ControllerBase
+public class ClassesController(IClock clock, ClassInsightsContext context, IMapper mapper) : ControllerBase
 {
     /// <summary>
     ///     Find all classes
@@ -100,8 +100,8 @@ public class ClassesController(ClassInsightsContext context, IMapper mapper) : C
 
         // check minimum positive of difference between now and future
         var currentLesson = lessons
-            .Where(x => (x.End - SystemClock.Instance.GetCurrentInstant())?.TotalMilliseconds > 0)
-            .MinBy(x => x.End - SystemClock.Instance.GetCurrentInstant());
+            .Where(x => (x.End - clock.GetCurrentInstant())?.TotalMilliseconds > 0)
+            .MinBy(x => x.End - clock.GetCurrentInstant());
 
         // all lessons are over
         if (currentLesson == null)

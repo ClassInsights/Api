@@ -6,13 +6,14 @@ using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
+using NodaTime.Extensions;
 
 namespace Api.Controllers;
 
 /// <inheritdoc />
 [Route("api/[controller]")]
 [ApiController]
-public class RoomsController(ClassInsightsContext context, UntisService untisService, IMapper mapper) : ControllerBase
+public class RoomsController(IClock clock, ClassInsightsContext context, UntisService untisService, IMapper mapper) : ControllerBase
 {
     /// <summary>
     ///     Find a room by name
@@ -50,8 +51,8 @@ public class RoomsController(ClassInsightsContext context, UntisService untisSer
     [HttpGet("{roomId:int}/lessons")]
     public async Task<IActionResult> GetLessonsInRoom(int roomId)
     {
-        var tz = DateTimeZoneProviders.Bcl.GetSystemDefault();
-        var today = SystemClock.Instance.GetCurrentInstant().InZone(tz).Date;
+        var tz = DateTimeZoneProviders.Tzdb.GetSystemDefault();
+        var today = clock.InTzdbSystemDefaultZone().GetCurrentDate();
 
         var todayLessons = await context.Lessons.AsNoTracking()
             .Where(x => x.RoomId == roomId && x.Start.HasValue && x.Start.Value.InZone(tz).Date == today)

@@ -14,7 +14,7 @@ namespace Api.Controllers;
 /// <inheritdoc />
 [Route("api/")]
 [ApiController]
-public class UserController(IConfiguration config, SettingsService settingsService, ClassInsightsContext context) : ControllerBase
+public class UserController(IConfiguration config, IClock clock, SettingsService settingsService, ClassInsightsContext context) : ControllerBase
 {
     /// <summary>
     ///     Logs user out
@@ -62,7 +62,7 @@ public class UserController(IConfiguration config, SettingsService settingsServi
             AzureUserId = userDto.AzureUserId,
             Email = userDto.Email,
             Username = userDto.Username,
-            LastSeen = SystemClock.Instance.GetCurrentInstant()
+            LastSeen = clock.GetCurrentInstant()
         });
 
         await context.SaveChangesAsync();

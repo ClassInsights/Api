@@ -10,7 +10,7 @@ namespace Api.Controllers;
 
 /// <inheritdoc />
 [ApiExplorerSettings(IgnoreApi = true)] // ignore in swagger
-public class WebSocketController(ClassInsightsContext context) : ControllerBase
+public class WebSocketController(IClock clock, ClassInsightsContext context) : ControllerBase
 {
     /// <summary>
     ///     Dictionary of all client WebSockets for a computer
@@ -119,7 +119,7 @@ public class WebSocketController(ClassInsightsContext context) : ControllerBase
             if (computer == null)
                 continue;
 
-            computer.LastSeen = SystemClock.Instance.GetCurrentInstant();
+            computer.LastSeen = clock.GetCurrentInstant();
             await context.SaveChangesAsync();
         }
 
