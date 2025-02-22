@@ -55,11 +55,11 @@ public class UserController(IConfiguration config, IClock clock, SettingsService
 
         if (!response.IsSuccessStatusCode) return Unauthorized();
         
-        var schoolId = await settingsService.GetSettingAsync("SchoolId");
-        var schoolName = await settingsService.GetSettingAsync("SchoolName") ?? string.Empty;
-
+        var schoolDto = await settingsService.GetSettingAsync<ServerDto.SchoolDto>("school");
+        if (schoolDto == null) return NotFound();
+        
         var userDto = await response.Content.ReadFromJsonAsync<ServerDto.UserDto>();
-        if (userDto?.Schools.FirstOrDefault(x => x.SchoolId.ToString() == schoolId) is not { } school || (!school.Roles.Contains("Admin") && !school.Roles.Contains("Teacher")))
+        if (userDto?.Schools.FirstOrDefault(x => x.SchoolId == schoolDto.SchoolId) is not { } userSchoolDto || (!userSchoolDto.Roles.Contains("Admin") && !userSchoolDto.Roles.Contains("Teacher")))
             return Unauthorized();
         
         context.Users.Update(new User
@@ -75,8 +75,8 @@ public class UserController(IConfiguration config, IClock clock, SettingsService
         
         claims.AddClaim(new Claim(JwtRegisteredClaimNames.Name, userDto.Username));
         claims.AddClaim(new Claim(JwtRegisteredClaimNames.Email, userDto.Email));
-        claims.AddClaim(new Claim("school_name", schoolName));
-        claims.AddClaim(new Claim(ClaimTypes.Role, JsonSerializer.Serialize(school.Roles), JsonClaimValueTypes.JsonArray));
+        claims.AddClaim(new Claim("school_name", schoolDto.Name));
+        claims.AddClaim(new Claim(ClaimTypes.Role, JsonSerializer.Serialize(userSchoolDto.Roles), JsonClaimValueTypes.JsonArray));
 
         return Ok(new
         {
@@ -106,7 +106,7 @@ public class UserController(IConfiguration config, IClock clock, SettingsService
 
     private async Task<string?> GenJwtToken(ClaimsIdentity subject)
     {
-        var key = await settingsService.GetSettingAsync("JwtKey");
+        var key = await settingsService.GetSettingAsync<string>("JwtKey");
         if (key is null)
             return null;
 

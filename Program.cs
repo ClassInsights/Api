@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.RateLimiting;
 using Api;
@@ -25,18 +24,8 @@ builder.Services.AddDbContext<ClassInsightsContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("npgsql"), o => o.UseNodaTime());
 });
 
-var settingsService = new SettingsService();
-
 // Add Settings Service
-builder.Services.AddSingleton(settingsService);
-
-// Read or generate jwt key
-var jwtKey = settingsService.GetSettingAsync("JwtKey").GetAwaiter().GetResult();
-if (string.IsNullOrWhiteSpace(jwtKey))
-{
-    jwtKey = Convert.ToBase64String(RandomNumberGenerator.GetBytes(128));
-    settingsService.SetSettingAsync("JwtKey", jwtKey).GetAwaiter().GetResult();
-}
+builder.Services.AddSingleton<SettingsService>();
 
 // add authentication
 builder.Services.AddAuthentication(c =>
@@ -51,7 +40,7 @@ builder.Services.AddAuthentication(c =>
         ValidateIssuerSigningKey = true,
         ValidateAudience = false,
         ValidIssuer = "ClassInsights",
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtKey"]!))
     };
 });
 

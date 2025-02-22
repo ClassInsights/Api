@@ -48,7 +48,6 @@ public class IdentityService(IConfiguration config, ILogger<IdentityService> log
         if (school is null)
             throw new InvalidOperationException("Your license is invalid");
         
-        await settingsService.SetSettingAsync("SchoolName", school.Name);
-        await settingsService.SetSettingAsync("SchoolId", school.SchoolId.ToString());
+        await settingsService.SetSettingAsync("school", school);
     }
 }

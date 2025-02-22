@@ -4,40 +4,59 @@ namespace Api.Services;
 
 public class SettingsService
 {
+    private readonly ILogger<SettingsService> _logger;
     private readonly SemaphoreSlim _cacheLock = new(1, 1);
-    private readonly string _filePath;
-    private readonly Dictionary<string, string> _settingsCache;
-
-    public SettingsService(string filePath = "settings.json")
+    private const string FilePath = "settings.json";
+    private Dictionary<string, object> _settingsCache = new();
+    private readonly JsonSerializerOptions _serializerOptions = new() { WriteIndented = true, PropertyNameCaseInsensitive = true};
+    
+    public SettingsService(ILogger<SettingsService> logger)
     {
-        _filePath = filePath;
-
-        // Load settings into the cache during initialization
-        _settingsCache = File.Exists(_filePath)
-            ? JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(_filePath)) ??
-              new Dictionary<string, string>()
-            : new Dictionary<string, string>();
+        _logger = logger;
+        _ = LoadSettingsAsync();
     }
 
-    public async Task<string?> GetSettingAsync(string key)
+    private async Task LoadSettingsAsync()
+    {
+        if (!File.Exists(FilePath))
+            return;
+
+        try
+        {
+            var json = await File.ReadAllTextAsync(FilePath);
+            var settings = JsonSerializer.Deserialize<Dictionary<string, object>>(json, _serializerOptions);
+            if (settings != null)
+            {
+                _settingsCache = settings;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load settings");
+        }
+    }
+
+    public Task<T?> GetSettingAsync<T>(string key)
+    {
+        if (!_settingsCache.TryGetValue(key, out var jsonValue))
+            return Task.FromResult(default(T));
+        try
+        {
+            return Task.FromResult(JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(jsonValue, _serializerOptions)));
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Failed to parse settings");
+        }
+        return Task.FromResult(default(T));
+    }
+
+    public async Task SetSettingAsync<T>(string key, T value)
     {
         await _cacheLock.WaitAsync();
         try
         {
-            return _settingsCache.TryGetValue(key, out var value) ? value : null;
-        }
-        finally
-        {
-            _cacheLock.Release();
-        }
-    }
-
-    public async Task SetSettingAsync(string key, string value)
-    {
-        await _cacheLock.WaitAsync();
-        try
-        {
-            _settingsCache[key] = value;
+            _settingsCache[key] = value!;
             await SaveSettingsToFileAsync();
         }
         finally
@@ -48,7 +67,18 @@ public class SettingsService
 
     private async Task SaveSettingsToFileAsync()
     {
-        var json = JsonSerializer.Serialize(_settingsCache);
-        await File.WriteAllTextAsync(_filePath, json);
+        try
+        {
+            var json = JsonSerializer.Serialize(_settingsCache, _serializerOptions);
+
+            // Atomic Write
+            const string tempFile = FilePath + ".tmp";
+            await File.WriteAllTextAsync(tempFile, json);
+            File.Move(tempFile, FilePath, true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save settings");
+        }
     }
 }
