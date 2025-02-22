@@ -70,6 +70,9 @@ if (builder.Environment.IsProduction())
     builder.Services.AddHostedService<UntisService>(provider => provider.GetRequiredService<UntisService>());
 }
 
+// Add identity Service
+builder.Services.AddHostedService<IdentityService>();
+
 // configure swagger
 builder.Services.AddSwaggerGen(options =>
 {

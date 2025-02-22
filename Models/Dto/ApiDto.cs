@@ -7,8 +7,6 @@ namespace Api.Models.Dto;
 /// </summary>
 public class ApiDto
 {
-    public record UserDto(long? UserId, string AzureUserId, string Email, string Username);
-
     /// <summary>
     ///     Class object
     /// </summary>

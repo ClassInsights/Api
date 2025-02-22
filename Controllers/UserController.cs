@@ -1,6 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using Api.Models.Database;
 using Api.Models.Dto;
 using Api.Services;
@@ -41,20 +42,24 @@ public class UserController(IConfiguration config, IClock clock, SettingsService
     public async Task<IActionResult> LoginUser()
     {
         Request.Headers.TryGetValue("Authorization", out var authorization);
-        var token = authorization.FirstOrDefault();
+        var token = authorization.FirstOrDefault()?.Split(" ")[1];
         
         if (string.IsNullOrEmpty(token))
             return Unauthorized();
         
         using var client = new HttpClient();
-
+        client.BaseAddress = new Uri("https://classinsights.at/api/");
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-        var response = await client.GetAsync("https://classinsights.at/api/userinfo");
+        
+        var response = await client.GetAsync("userinfo");
 
         if (!response.IsSuccessStatusCode) return Unauthorized();
+        
+        var schoolId = await settingsService.GetSettingAsync("SchoolId");
+        var schoolName = await settingsService.GetSettingAsync("SchoolName") ?? string.Empty;
 
-        var userDto = await response.Content.ReadFromJsonAsync<ApiDto.UserDto>();
-        if (userDto == null)
+        var userDto = await response.Content.ReadFromJsonAsync<ServerDto.UserDto>();
+        if (userDto?.Schools.FirstOrDefault(x => x.SchoolId.ToString() == schoolId) is not { } school || (!school.Roles.Contains("Admin") && !school.Roles.Contains("Teacher")))
             return Unauthorized();
         
         context.Users.Update(new User
@@ -66,12 +71,16 @@ public class UserController(IConfiguration config, IClock clock, SettingsService
         });
 
         await context.SaveChangesAsync();
-
-        var accessToken = GenJwtToken(new ClaimsIdentity());
+        var claims = new ClaimsIdentity();
+        
+        claims.AddClaim(new Claim(JwtRegisteredClaimNames.Name, userDto.Username));
+        claims.AddClaim(new Claim(JwtRegisteredClaimNames.Email, userDto.Email));
+        claims.AddClaim(new Claim("school_name", schoolName));
+        claims.AddClaim(new Claim(ClaimTypes.Role, JsonSerializer.Serialize(school.Roles), JsonClaimValueTypes.JsonArray));
 
         return Ok(new
         {
-            access_token = accessToken
+            access_token = await GenJwtToken(claims)
         });
     }
 
