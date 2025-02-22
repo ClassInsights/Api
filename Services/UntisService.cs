@@ -18,7 +18,7 @@ public class UntisService(
     IServiceScopeFactory serviceScope,
     IConfiguration configuration) : BackgroundService
 {
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
     private TokenDto? _tokenResponse;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
