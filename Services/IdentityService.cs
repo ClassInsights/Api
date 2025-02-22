@@ -4,7 +4,7 @@ using Api.Models.Dto;
 
 namespace Api.Services;
 
-public class IdentityService(IConfiguration config, ILogger<IdentityService> logger, SettingsService settingsService): BackgroundService
+public class IdentityService(IConfiguration config, ILogger<IdentityService> logger, IHostApplicationLifetime hostApplicationLifetime,  SettingsService settingsService): BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -20,7 +20,7 @@ public class IdentityService(IConfiguration config, ILogger<IdentityService> log
                 if (ex.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Unauthorized)
                 {
                     logger.LogCritical("Invalid or expired license! Please visit https://classinsights.at and contact us! ");
-                    Environment.Exit(-1);
+                    hostApplicationLifetime.StopApplication();
                 }
             }
         } while (await timer.WaitForNextTickAsync(stoppingToken));
