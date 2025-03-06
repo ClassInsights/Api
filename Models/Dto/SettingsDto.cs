@@ -18,5 +18,11 @@ public class SettingsDto
         
         // how long can user be inactive until shutdown
         public int AfkTimeout { get; set; } = 15;
+        
+        // wait after lessons before shutdown
+        public bool DelayShutdown { get; set; } = true;
+        
+        // how long should be waited before shutdown
+        public int ShutdownDelay { get; set; } = 3;
     }
 }
