@@ -80,7 +80,7 @@ public class UserController(IConfiguration config, IClock clock, SettingsService
 
         return Ok(new
         {
-            access_token = await GenJwtToken(claims)
+            access_token = GenJwtToken(claims)
         });
     }
 
@@ -89,7 +89,7 @@ public class UserController(IConfiguration config, IClock clock, SettingsService
     /// </summary>
     /// <returns>Jwt Bearer Token</returns>
     [HttpGet("login/computer"), AllowAnonymous]
-    public async Task<IActionResult> LoginComputer()
+    public IActionResult LoginComputer()
     {
         Request.Headers.TryGetValue("Authorization", out var authorization);
         var computerToken = authorization.FirstOrDefault();
@@ -100,22 +100,18 @@ public class UserController(IConfiguration config, IClock clock, SettingsService
         var claims = new ClaimsIdentity();
         claims.AddClaim(new Claim(ClaimTypes.Role, "Computer"));
 
-        var token = await GenJwtToken(claims);
+        var token = GenJwtToken(claims);
         return token == null ? Unauthorized() : Ok(token);
     }
 
-    private async Task<string?> GenJwtToken(ClaimsIdentity subject)
+    private string? GenJwtToken(ClaimsIdentity subject)
     {
-        var key = await settingsService.GetSettingAsync<string>("JwtKey");
-        if (key is null)
-            return null;
-
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = subject,
             Expires = DateTime.UtcNow.AddDays(2),
             Issuer = "ClassInsights",
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["JwtKey"]!)),
                 SecurityAlgorithms.HmacSha256)
         };
 
