@@ -16,6 +16,7 @@ public class SettingsController(SettingsService settingsService) : ControllerBas
         if (settings != null) return Ok(settings);
         
         settings = new SettingsDto.Dashboard();
+        settings.AfkTimeout = Math.Max(5, settings.AfkTimeout);
         await settingsService.SetSettingAsync("dashboard", settings);
 
         return Ok(settings);
