@@ -17,6 +17,6 @@ public class MappingProfile : Profile
         CreateMap<ApiDto.SubjectDto, Subject>().ReverseMap();
         CreateMap<ApiDto.ComputerDto, Computer>().ReverseMap();
         CreateMap<Room, ApiDto.RoomDto>()
-            .ConstructUsing(x => new ApiDto.RoomDto(x.RoomId, x.DisplayName!, null));
+            .ConstructUsing(x => new ApiDto.RoomDto(x.RoomId, x.DisplayName!, x.Regex!, x.Enabled, null));
     }
 }

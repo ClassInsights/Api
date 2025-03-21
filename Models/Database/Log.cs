@@ -1,8 +1,10 @@
-﻿using NodaTime;
+﻿using System;
+using System.Collections.Generic;
+using NodaTime;
 
 namespace Api.Models.Database;
 
-public class Log
+public partial class Log
 {
     public long LogId { get; set; }
 

@@ -1,6 +1,9 @@
-﻿namespace Api.Models.Database;
+﻿using System;
+using System.Collections.Generic;
 
-public class Subject
+namespace Api.Models.Database;
+
+public partial class Subject
 {
     public long SubjectId { get; set; }
 

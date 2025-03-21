@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Models.Database;
 
@@ -134,6 +136,9 @@ public partial class ClassInsightsContext : DbContext
             entity.Property(e => e.DisplayName)
                 .HasMaxLength(100)
                 .HasColumnName("display_name");
+            entity.Property(e => e.Enabled)
+                .HasDefaultValue(false)
+                .HasColumnName("enabled");
             entity.Property(e => e.Regex)
                 .HasMaxLength(100)
                 .HasColumnName("regex");

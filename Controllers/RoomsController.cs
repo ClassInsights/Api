@@ -3,6 +3,7 @@ using Api.Models.Database;
 using Api.Models.Dto;
 using Api.Services;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
@@ -13,7 +14,8 @@ namespace Api.Controllers;
 /// <inheritdoc />
 [Route("api/[controller]")]
 [ApiController]
-public class RoomsController(IClock clock, ClassInsightsContext context, UntisService untisService, IMapper mapper) : ControllerBase
+public class RoomsController(IClock clock, ClassInsightsContext context, UntisService untisService, IMapper mapper)
+    : ControllerBase
 {
     /// <summary>
     ///     Find a room by name
@@ -27,6 +29,27 @@ public class RoomsController(IClock clock, ClassInsightsContext context, UntisSe
     {
         var room = await context.Rooms.FirstOrDefaultAsync(x => x.Regex != null && Regex.IsMatch(roomName, x.Regex));
         return Ok(mapper.Map<ApiDto.RoomDto>(room));
+    }
+
+    /// <summary>
+    ///     Update a room by ID
+    /// </summary>
+    /// <param name="roomId">ID of room</param>
+    /// <param name="roomDto">New room object</param>
+    /// <returns></returns>
+    [HttpPatch("{roomId:long}"), AllowAnonymous]
+    public async Task<IActionResult> UpdateRoom(long roomId, ApiDto.RoomDto roomDto)
+    {
+        var room = await context.Rooms.FindAsync(roomId);
+        if (room is null)
+            return NotFound();
+        
+        room.DisplayName = roomDto.DisplayName;
+        room.Regex = roomDto.Regex;
+        room.Enabled = roomDto.Enabled;
+        
+        await context.SaveChangesAsync();
+        return Ok();
     }
 
     /// <summary>
@@ -69,10 +92,10 @@ public class RoomsController(IClock clock, ClassInsightsContext context, UntisSe
     {
         var rooms = await context.Rooms.AsNoTracking().Include(dbRoom => dbRoom.Computers)
             .Where(dbRoom => dbRoom.Computers.Count > 0).Select(room =>
-                new ApiDto.RoomDto(room.RoomId, room.DisplayName!, room.Computers.Count)).ToListAsync();
+                new ApiDto.RoomDto(room.RoomId, room.DisplayName!, room.Regex!, room.Enabled, room.Computers.Count)).ToListAsync();
         return Ok(rooms);
     }
-    
+
     /// <summary>
     ///     Force refresh for all rooms and untis records
     /// </summary>

@@ -85,7 +85,7 @@ public class ApiDto
     /// <param name="Name">Name of Room</param>
     /// <param name="LongName">Fullname of Room</param>
     /// <param name="DeviceCount">Count of Computers inside of Room</param>
-    public record RoomDto(long RoomId, string DisplayName, int? DeviceCount);
+    public record RoomDto(long RoomId, string DisplayName, string Regex, bool Enabled, int? DeviceCount);
 
     /// <summary>
     ///     Subject object

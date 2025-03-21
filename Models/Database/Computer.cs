@@ -1,8 +1,10 @@
-﻿using NodaTime;
+﻿using System;
+using System.Collections.Generic;
+using NodaTime;
 
 namespace Api.Models.Database;
 
-public class Computer
+public partial class Computer
 {
     public long ComputerId { get; set; }
 

@@ -1,8 +1,10 @@
-﻿using NodaTime;
+﻿using System;
+using System.Collections.Generic;
+using NodaTime;
 
 namespace Api.Models.Database;
 
-public class User
+public partial class User
 {
     public long UserId { get; set; }
 
