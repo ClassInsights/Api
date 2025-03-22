@@ -6,7 +6,7 @@ public class SettingsService
 {
     private readonly ILogger<SettingsService> _logger;
     private readonly SemaphoreSlim _cacheLock = new(1, 1);
-    private const string FilePath = "settings.json";
+    private const string FilePath = "data/settings.json";
     private Dictionary<string, object> _settingsCache = new();
     private readonly JsonSerializerOptions _serializerOptions = new() { WriteIndented = true, PropertyNameCaseInsensitive = true};
     
@@ -18,6 +18,7 @@ public class SettingsService
 
     private async Task LoadSettingsAsync()
     {
+        Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
         if (!File.Exists(FilePath))
             return;
 
