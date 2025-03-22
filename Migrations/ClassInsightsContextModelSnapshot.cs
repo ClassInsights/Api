@@ -180,6 +180,12 @@ namespace Api.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("display_name");
 
+                    b.Property<bool>("Enabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("enabled");
+
                     b.Property<string>("Regex")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")

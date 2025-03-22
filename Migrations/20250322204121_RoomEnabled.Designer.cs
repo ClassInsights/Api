@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Api.Migrations
 {
     [DbContext(typeof(ClassInsightsContext))]
-    [Migration("20250321093042_RoomEnabled")]
+    [Migration("20250322204121_RoomEnabled")]
     partial class RoomEnabled
     {
         /// <inheritdoc />
@@ -182,6 +182,12 @@ namespace Api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("display_name");
+
+                    b.Property<bool>("Enabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("enabled");
 
                     b.Property<string>("Regex")
                         .HasMaxLength(100)
