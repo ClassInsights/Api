@@ -8,6 +8,7 @@ using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using NodaTime.Serialization.SystemTextJson;
+using NodaTime.Text;
 
 namespace Api.Services;
 
@@ -15,16 +16,20 @@ public class UntisService(
     ILogger<UntisService> logger,
     SettingsService settingsService,
     IMapper mapper,
+    IClock clock,
     IServiceScopeFactory serviceScope,
     IConfiguration configuration) : BackgroundService
 {
     private readonly Lock _lock = new();
     private TokenDto? _tokenResponse;
+    private Instant? _lastFetch;
+    private int _fetchCount;
+    private bool FetchAllLessons => _fetchCount % 10 == 0; // fetch all lessons every 10 fetches
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         logger.LogInformation("UntisService is running");
-        using PeriodicTimer timer = new(TimeSpan.FromHours(5));
+        using PeriodicTimer timer = new(TimeSpan.FromMinutes(20));
         try
         {
             do
@@ -73,15 +78,25 @@ public class UntisService(
             if (timetable.TimetableData.Periods is { Count: > 0 } periods)
             {
                 var tz = DateTimeZoneProviders.Tzdb.GetSystemDefault();
-                await context.Lessons.ExecuteDeleteAsync();
-
+                
+                // delete all lessons on full fetch
+                if (FetchAllLessons)
+                    await context.Lessons.ExecuteDeleteAsync();
+                else
+                {
+                    var cancelledLessons = periods.Where(x => x.Status == PeriodStatusEnum.CANCELLED).Select(x => x.Id).ToList();
+                    if (cancelledLessons.Count > 0)
+                        await context.Lessons.Where(lesson => cancelledLessons.Contains(lesson.PeriodId)).ExecuteDeleteAsync();
+                }
+                
                 List<Lesson> lessons = (from period in periods
-                    where period.Status is PeriodStatusEnum.REGULAR or PeriodStatusEnum.ADDED
-                    from classDto in period.Classes
-                    from subjects in period.Subjects
-                    from room in period.Rooms
+                    where period.Status is not PeriodStatusEnum.CANCELLED
+                    from classDto in period.Classes where classDto.Status is not ResourceStatusEnum.REMOVED
+                    from subjects in period.Subjects where subjects.Status is not ResourceStatusEnum.REMOVED
+                    from room in period.Rooms where room.Status is not ResourceStatusEnum.REMOVED
                     select new Lesson
                     {
+                        PeriodId = period.Id,
                         ClassId = classDto.Id,
                         SubjectId = subjects.Id,
                         RoomId = room.Id,
@@ -126,13 +141,16 @@ public class UntisService(
     
     private async Task<TimetableDto> GetTimetableAsync(long[]? roomIds = null)
     {
-        var response = await CallApiEndpointAsync("https://classinsights.at/api/untis/timetable" + (roomIds == null ? "" : $"?room={string.Join("&room=", roomIds)}"), HttpMethod.Get);
+        var response = await CallApiEndpointAsync("https://classinsights.at/api/untis/timetable" + (roomIds == null ? "" : $"?room={string.Join("&room=", roomIds)}&lastModified={(FetchAllLessons ? "" : _lastFetch?.InZone(DateTimeZoneProviders.Tzdb.GetSystemDefault()).ToString(InstantPattern.ExtendedIso.PatternText, CultureInfo.InvariantCulture))}"), HttpMethod.Get);
 
         response.EnsureSuccessStatusCode();
 
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
         options.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
 
+        _lastFetch = clock.GetCurrentInstant();
+        _fetchCount++;
+        
         return await response.Content.ReadFromJsonAsync<TimetableDto>(options) ??
                throw new NullReferenceException("Timetable response is null");
     }
