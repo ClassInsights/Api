@@ -18,6 +18,8 @@ public partial class Lesson
 
     public Instant? End { get; set; }
 
+    public long PeriodId { get; set; }
+
     public virtual Class Class { get; set; } = null!;
 
     public virtual Room Room { get; set; } = null!;

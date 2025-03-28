@@ -91,6 +91,7 @@ public partial class ClassInsightsContext : DbContext
             entity.Property(e => e.LessonId).HasColumnName("lesson_id");
             entity.Property(e => e.ClassId).HasColumnName("class_id");
             entity.Property(e => e.End).HasColumnName("end");
+            entity.Property(e => e.PeriodId).HasColumnName("period_id");
             entity.Property(e => e.RoomId).HasColumnName("room_id");
             entity.Property(e => e.Start).HasColumnName("start");
             entity.Property(e => e.SubjectId).HasColumnName("subject_id");
