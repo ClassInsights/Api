@@ -107,7 +107,7 @@ public class UntisService(
             var dbRooms = mapper.Map<List<Room>>(rooms);
             await context.BulkInsertOrUpdateAsync(dbRooms, config =>
             {
-                config.PropertiesToExclude = [nameof(Room.Regex)];
+                config.PropertiesToExclude = [nameof(Room.Regex), nameof(Room.Enabled)];
             });
         }
 
