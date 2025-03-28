@@ -201,7 +201,7 @@ public enum PeriodStatusEnum
 {
     REGULAR,
     CANCELLED,
-    ADDED,
+    ADDITIONAL,
     CHANGED
 }
 
