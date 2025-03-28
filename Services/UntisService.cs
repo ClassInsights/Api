@@ -35,6 +35,7 @@ public class UntisService(
             do
             {
                 await UpdateUntisRecords();
+                _fetchCount++;
             } while (await timer.WaitForNextTickAsync(stoppingToken));
         }
         catch (OperationCanceledException)
@@ -149,8 +150,6 @@ public class UntisService(
         options.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
 
         _lastFetch = clock.GetCurrentInstant();
-        _fetchCount++;
-        
         return await response.Content.ReadFromJsonAsync<TimetableDto>(options) ??
                throw new NullReferenceException("Timetable response is null");
     }
