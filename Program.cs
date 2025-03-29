@@ -102,23 +102,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Configure ssl
-builder.WebHost.ConfigureKestrel(serverOptions =>
-{
-    serverOptions.ConfigureHttpsDefaults(options =>
-    {
-        options.ClientCertificateMode = ClientCertificateMode.AllowCertificate;
-    });
-    
-    /*serverOptions.ListenAnyIP(7061, listenOptions =>
-    {// todo: create ssl cert depending on domain
-        if (!File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "ssl.pfx")))
-            CertificateUtils.SaveCertificate(CertificateUtils.CreateClientCertificate("ClassInsights"), "ssl.pfx");
-
-        listenOptions.UseHttps("ssl.pfx");
-    });*/
-});
-
 // Configure Rate Limits
 builder.Services.AddRateLimiter(options =>
 {
