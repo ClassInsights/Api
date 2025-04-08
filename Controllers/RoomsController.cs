@@ -28,7 +28,8 @@ public class RoomsController(IClock clock, ClassInsightsContext context, UntisSe
     public async Task<IActionResult> GetRoomByName(string roomName)
     {
         var room = await context.Rooms.FirstOrDefaultAsync(x => x.Regex != null && Regex.IsMatch(roomName, x.Regex));
-        return Ok(mapper.Map<ApiDto.RoomDto>(room));
+        var roomDto = mapper.Map<ApiDto.RoomDto>(room);
+        return roomDto == null ? NotFound() : Ok(roomDto);
     }
 
     /// <summary>
