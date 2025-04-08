@@ -4,7 +4,6 @@ using Api;
 using Api.Models.Database;
 using Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -26,6 +25,8 @@ builder.Services.AddDbContext<ClassInsightsContext>(options =>
 
 // Add Settings Service
 builder.Services.AddSingleton<SettingsService>();
+
+builder.Services.AddHttpClient();
 
 // add authentication
 builder.Services.AddAuthentication(c =>

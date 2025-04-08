@@ -21,6 +21,7 @@ public class ServerDto
         [property: JsonPropertyName("school_id")]
         long SchoolId,
         string Name,
+        string Website,
         [property: JsonPropertyName("local_api_url")]
         string LocalApiUrl,
         [property: JsonPropertyName("local_dashboard_url")]

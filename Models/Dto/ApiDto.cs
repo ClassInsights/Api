@@ -1,4 +1,5 @@
-﻿using NodaTime;
+﻿using System.Text.Json.Serialization;
+using NodaTime;
 
 namespace Api.Models.Dto;
 
@@ -7,6 +8,12 @@ namespace Api.Models.Dto;
 /// </summary>
 public class ApiDto
 {
+    public class DashboardTokenDto(string dashboardToken)
+    {
+        [JsonPropertyName("dashboard_token")]
+        public string DashboardToken { get; } = dashboardToken;
+    }
+    
     /// <summary>
     ///     Class object
     /// </summary>

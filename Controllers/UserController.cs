@@ -15,7 +15,7 @@ namespace Api.Controllers;
 /// <inheritdoc />
 [Route("api/")]
 [ApiController]
-public class UserController(IConfiguration config, IClock clock, SettingsService settingsService, ClassInsightsContext context) : ControllerBase
+public class UserController(IConfiguration config, IClock clock, IHttpClientFactory httpClientFactory, SettingsService settingsService, ClassInsightsContext context) : ControllerBase
 {
     /// <summary>
     ///     Logs user out
@@ -39,32 +39,30 @@ public class UserController(IConfiguration config, IClock clock, SettingsService
     }
 
     [HttpPost("user"), AllowAnonymous]
-    public async Task<IActionResult> LoginUser()
+    public async Task<IActionResult> LoginUser([FromBody] ApiDto.DashboardTokenDto token)
     {
-        Request.Headers.TryGetValue("Authorization", out var authorization);
-        var token = authorization.FirstOrDefault()?.Split(" ")[1];
+        using var client = httpClientFactory.CreateClient();
         
-        if (string.IsNullOrEmpty(token))
+        var response = await client.PostAsJsonAsync("https://classinsights.at/api/school/dashboard/user", new
+        {
+            dashboard_token = token.DashboardToken
+        });
+
+        if (!response.IsSuccessStatusCode)
             return Unauthorized();
         
-        using var client = new HttpClient();
-        client.BaseAddress = new Uri("https://classinsights.at/api/");
-        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-        
-        var response = await client.GetAsync("userinfo");
-
-        if (!response.IsSuccessStatusCode) return Unauthorized();
-        
-        var schoolDto = await settingsService.GetSettingAsync<ServerDto.SchoolDto>("school");
-        if (schoolDto == null) return NotFound();
+        if (await settingsService.GetSettingAsync<ServerDto.SchoolDto>("school") is not { } schoolDto)
+            return NotFound();
         
         var userDto = await response.Content.ReadFromJsonAsync<ServerDto.UserDto>();
-        if (userDto?.Schools.FirstOrDefault(x => x.SchoolId == schoolDto.SchoolId) is not { } userSchoolDto || (!userSchoolDto.Roles.Contains("Admin") && !userSchoolDto.Roles.Contains("Teacher")))
+        var userSchoolDto = userDto?.Schools.FirstOrDefault(s => s.SchoolId == schoolDto.SchoolId);
+        
+        if (userSchoolDto == null || !userSchoolDto.Roles.Contains("Admin") && !userSchoolDto.Roles.Contains("Teacher"))
             return Unauthorized();
         
         context.Users.Update(new User
         {
-            AzureUserId = userDto.AzureUserId,
+            AzureUserId = userDto!.AzureUserId,
             Email = userDto.Email,
             Username = userDto.Username,
             LastSeen = clock.GetCurrentInstant()
