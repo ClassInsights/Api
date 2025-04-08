@@ -14,6 +14,12 @@ public class ApiDto
         public string DashboardToken { get; } = dashboardToken;
     }
     
+    public class ComputerTokenDto(string computerToken)
+    {
+        [JsonPropertyName("computer_token")]
+        public string ComputerToken { get; } = computerToken;
+    }
+    
     /// <summary>
     ///     Class object
     /// </summary>

@@ -86,13 +86,10 @@ public class UserController(IConfiguration config, IClock clock, IHttpClientFact
     ///     Login endpoint for computers
     /// </summary>
     /// <returns>Jwt Bearer Token</returns>
-    [HttpGet("login/computer"), AllowAnonymous]
-    public IActionResult LoginComputer()
+    [HttpPost("login/computer"), AllowAnonymous]
+    public IActionResult LoginComputer([FromBody] ApiDto.ComputerTokenDto tokenDto)
     {
-        Request.Headers.TryGetValue("Authorization", out var authorization);
-        var computerToken = authorization.FirstOrDefault();
-        
-        if (string.IsNullOrEmpty(computerToken) || computerToken != config["ComputerToken"])
+        if (tokenDto.ComputerToken != config["ComputerToken"])
             return Unauthorized();
         
         var claims = new ClaimsIdentity();
