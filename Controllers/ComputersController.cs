@@ -33,6 +33,16 @@ public class ComputersController(IClock clock, ClassInsightsContext context, IMa
 
         return Ok(mapper.Map<ApiDto.ComputerDto>(dbComputer));
     }
+    
+    /// <summary>
+    ///     Find all Computers
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetComputers()
+    {
+        var computers = await context.Computers.AsNoTracking().ToListAsync();
+        return Ok(mapper.Map<List<ApiDto.ComputerDto>>(computers));
+    }
 
     /// <summary>
     ///     Get information of computer by name
