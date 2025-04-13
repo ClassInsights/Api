@@ -43,7 +43,8 @@ public class UserController(IConfiguration config, IClock clock, IHttpClientFact
     {
         using var client = httpClientFactory.CreateClient();
         
-        var response = await client.PostAsJsonAsync("https://classinsights.at/api/school/dashboard/user", new
+        var server = config["Server"]!;
+        var response = await client.PostAsJsonAsync($"{server}/api/school/dashboard/user", new
         {
             dashboard_token = token.DashboardToken
         });

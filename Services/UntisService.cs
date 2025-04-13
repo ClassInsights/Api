@@ -142,7 +142,8 @@ public class UntisService(
     
     private async Task<TimetableDto> GetTimetableAsync(long[]? roomIds = null)
     {
-        var response = await CallApiEndpointAsync("https://classinsights.at/api/untis/timetable" + (roomIds == null ? "" : $"?room={string.Join("&room=", roomIds)}&lastModified={(FetchAllLessons ? "" : _lastFetch?.InZone(DateTimeZoneProviders.Tzdb.GetSystemDefault()).ToString(InstantPattern.ExtendedIso.PatternText, CultureInfo.InvariantCulture))}"), HttpMethod.Get);
+        var server = configuration["Server"]!;
+        var response = await CallApiEndpointAsync($"{server}/api/untis/timetable" + (roomIds == null ? "" : $"?room={string.Join("&room=", roomIds)}&lastModified={(FetchAllLessons ? "" : _lastFetch?.InZone(DateTimeZoneProviders.Tzdb.GetSystemDefault()).ToString(InstantPattern.ExtendedIso.PatternText, CultureInfo.InvariantCulture))}"), HttpMethod.Get);
 
         response.EnsureSuccessStatusCode();
 
@@ -201,9 +202,10 @@ public class UntisService(
 
         logger.LogInformation("Fetching new Access Token");
         using var client = new HttpClient();
+        var server = configuration["Server"]!;
 
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {license}");
-        var response = await client.PostAsync("https://classinsights.at/api/login", null);
+        var response = await client.PostAsync($"{server}/api/login", null);
 
         response.EnsureSuccessStatusCode();
 
