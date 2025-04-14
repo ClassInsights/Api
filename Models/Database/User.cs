@@ -14,7 +14,6 @@ public partial class User
 
     public string Email { get; set; } = null!;
 
-    public string? RefreshToken { get; set; }
-
     public Instant? LastSeen { get; set; }
+
 }

@@ -167,15 +167,12 @@ public partial class ClassInsightsContext : DbContext
 
             entity.Property(e => e.UserId).HasColumnName("user_id");
             entity.Property(e => e.AzureUserId)
-                .HasMaxLength(75)
+                .HasMaxLength(250)
                 .HasColumnName("azure_user_id");
             entity.Property(e => e.Email)
                 .HasMaxLength(100)
                 .HasColumnName("email");
             entity.Property(e => e.LastSeen).HasColumnName("last_seen");
-            entity.Property(e => e.RefreshToken)
-                .HasMaxLength(200)
-                .HasColumnName("refresh_token");
             entity.Property(e => e.Username)
                 .HasMaxLength(100)
                 .HasColumnName("username");
