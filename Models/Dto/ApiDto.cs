@@ -104,9 +104,8 @@ public class ApiDto
     ///     Subject object
     /// </summary>
     /// <param name="SubjectId">Id of Subject</param>
-    /// <param name="Name">Name of Subject</param>
-    /// <param name="LongName">Fullname of Subject</param>
-    public record SubjectDto(long SubjectId, string Name, string LongName);
+    /// <param name="DisplayName">Name of Subject</param>
+    public record SubjectDto(long SubjectId, string DisplayName);
 
     /// <summary>
     ///     SchoolYear object
