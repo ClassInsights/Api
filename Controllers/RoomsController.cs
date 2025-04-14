@@ -91,8 +91,7 @@ public class RoomsController(IClock clock, ClassInsightsContext context, UntisSe
     [HttpGet]
     public async Task<IActionResult> GetRooms()
     {
-        var rooms = await context.Rooms.AsNoTracking().Include(dbRoom => dbRoom.Computers)
-            .Where(dbRoom => dbRoom.Computers.Count > 0).Select(room =>
+        var rooms = await context.Rooms.AsNoTracking().Include(dbRoom => dbRoom.Computers).Select(room =>
                 new ApiDto.RoomDto(room.RoomId, room.DisplayName!, room.Regex!, room.Enabled, room.Computers.Count)).ToListAsync();
         return Ok(rooms);
     }
