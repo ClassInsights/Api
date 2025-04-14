@@ -4,6 +4,9 @@ public class SettingsDto
 {
     public class Dashboard
     {
+        // check if there are gaps between lessons 
+        public bool CheckGap { get; set; } = true;
+        
         // how long can a gap between lessons be
         public int LessonGapMinutes { get; set; } = 20;
         
