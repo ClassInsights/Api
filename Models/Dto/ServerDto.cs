@@ -5,8 +5,10 @@ namespace Api.Models.Dto;
 public class ServerDto
 {
     public record UserDto (
+        [property: JsonPropertyName("session_id")]
         string SessionId,
         string Username,
+        [property: JsonPropertyName("azure_user_id")]
         string AzureUserId,
         string Email,
         UserSchoolDto[] Schools
