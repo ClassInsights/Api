@@ -61,7 +61,7 @@ public class UserController(IConfiguration config, IClock clock, IHttpClientFact
         if (userSchoolDto == null || !userSchoolDto.Roles.Contains("Admin") && !userSchoolDto.Roles.Contains("Teacher"))
             return Unauthorized();
         
-        context.Users.Update(new User
+        var user = context.Users.Update(new User
         {
             AzureUserId = userDto!.AzureUserId,
             Email = userDto.Email,
@@ -72,6 +72,7 @@ public class UserController(IConfiguration config, IClock clock, IHttpClientFact
         await context.SaveChangesAsync();
         var claims = new ClaimsIdentity();
         
+        claims.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Entity.UserId.ToString()));
         claims.AddClaim(new Claim(JwtRegisteredClaimNames.Name, userDto.Username));
         claims.AddClaim(new Claim(JwtRegisteredClaimNames.Email, userDto.Email));
         claims.AddClaim(new Claim("school_name", schoolDto.Name));
