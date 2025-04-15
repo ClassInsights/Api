@@ -55,7 +55,7 @@ public class UserController(IConfiguration config, IClock clock, IHttpClientFact
         if (await settingsService.GetSettingAsync<ServerDto.SchoolDto>("school") is not { } schoolDto)
             return NotFound();
         
-        var userDto = await response.Content.ReadFromJsonAsync<ServerDto.UserDto>();
+        var userDto = await response.Content.ReadFromJsonAsync<ServerDto.UserDto>(JsonSerializerOptions.Web);
         var userSchoolDto = userDto?.Schools.FirstOrDefault(s => s.SchoolId == schoolDto.SchoolId);
         
         if (userSchoolDto == null || !userSchoolDto.Roles.Contains("Admin") && !userSchoolDto.Roles.Contains("Teacher"))
