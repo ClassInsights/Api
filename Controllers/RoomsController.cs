@@ -45,7 +45,6 @@ public class RoomsController(IClock clock, ClassInsightsContext context, UntisSe
         if (room is null)
             return NotFound();
         
-        room.DisplayName = roomDto.DisplayName;
         room.Regex = roomDto.Regex;
         room.Enabled = roomDto.Enabled;
         
@@ -92,7 +91,7 @@ public class RoomsController(IClock clock, ClassInsightsContext context, UntisSe
     public async Task<IActionResult> GetRooms()
     {
         var rooms = await context.Rooms.AsNoTracking().Include(dbRoom => dbRoom.Computers).Select(room =>
-                new ApiDto.RoomDto(room.RoomId, room.DisplayName!, room.Regex!, room.Enabled, room.Computers.Count)).ToListAsync();
+                new ApiDto.RoomDto(room.RoomId, room.Enabled, room.DisplayName!, room.Regex!, room.Computers.Count)).ToListAsync();
         return Ok(rooms);
     }
 

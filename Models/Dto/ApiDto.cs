@@ -40,7 +40,7 @@ public class ApiDto
         public bool Online => LastSeen > SystemClock.Instance.GetCurrentInstant().Minus(Duration.FromSeconds(10));
     }
     
-    public record RoomDto(long RoomId, string DisplayName, string Regex, bool Enabled, int? DeviceCount);
+    public record RoomDto(long RoomId, bool Enabled, string? DisplayName, string? Regex, int? DeviceCount);
     public record SubjectDto(long SubjectId, string DisplayName);
     public record LessonDto(long LessonId, long RoomId, long SubjectId, long ClassId, Instant? Start, Instant? End);
 }
