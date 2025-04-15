@@ -6,7 +6,7 @@ public class ServerDto
 {
     public record UserDto (
         [property: JsonPropertyName("session_id")]
-        string SessionId,
+        long SessionId,
         string Username,
         [property: JsonPropertyName("azure_user_id")]
         string AzureUserId,
