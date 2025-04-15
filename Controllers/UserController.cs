@@ -25,10 +25,10 @@ public class UserController(IConfiguration config, IClock clock, IHttpClientFact
     public async Task<IActionResult> LogoutUser()
     {
         var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(id))
+        if (string.IsNullOrEmpty(id) || !long.TryParse(id, out var userId))
             return Unauthorized();
 
-        var user = await context.Users.FindAsync(id);
+        var user = await context.Users.FindAsync(userId);
         if (user == null)
             return Ok();
 
