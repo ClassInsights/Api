@@ -6,10 +6,12 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <LangVersion>default</LangVersion>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="AutoMapper" Version="13.0.1"/>
+        <PackageReference Include="Docker.DotNet" Version="3.125.15" />
         <PackageReference Include="EFCore.BulkExtensions" Version="8.0.4"/>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.12" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.8"/>
