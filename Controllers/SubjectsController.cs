@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Api.Models.Database;
 using Api.Models.Dto;
 using AutoMapper;
@@ -10,28 +11,22 @@ namespace Api.Controllers;
 [ApiController]
 public class SubjectsController(ClassInsightsContext context, IMapper mapper) : ControllerBase
 {
-    /// <summary>
-    ///     Find all subjects
-    /// </summary>
-    /// <returns><see cref="List{T}" /> whose generic type argument is <see cref="ApiDto.SubjectDto" /></returns>
     [HttpGet]
+    [EndpointSummary("Find all subjects")]
+    [ProducesResponseType<List<SubjectDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllSubjects()
     {
-        return Ok(mapper.Map<List<ApiDto.SubjectDto>>(await context.Subjects.ToListAsync()));
+        return Ok(mapper.Map<List<SubjectDto>>(await context.Subjects.ToListAsync()));
     }
 
-    /// <summary>
-    ///     Find specific subject by ID
-    /// </summary>
-    /// <param name="subjectId">ID of subject</param>
-    /// <returns>
-    ///     <see cref="ApiDto.SubjectDto" />
-    /// </returns>
     [HttpGet("{subjectId:int}")]
-    public async Task<IActionResult> GetSubjectById(int subjectId)
+    [EndpointSummary("Find subject by id")]
+    [ProducesResponseType<SubjectDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetSubjectById([Description("Id of the subject you want to find")] int subjectId)
     {
         if (await context.Subjects.FindAsync(subjectId) is not { } subject)
             return NotFound();
-        return Ok(mapper.Map<ApiDto.SubjectDto>(subject));
+        return Ok(mapper.Map<SubjectDto>(subject));
     }
 }

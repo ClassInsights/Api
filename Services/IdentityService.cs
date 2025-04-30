@@ -4,7 +4,11 @@ using Api.Models.Dto;
 
 namespace Api.Services;
 
-public class IdentityService(IConfiguration config, ILogger<IdentityService> logger, IHostApplicationLifetime hostApplicationLifetime,  SettingsService settingsService): BackgroundService
+public class IdentityService(
+    IConfiguration config,
+    ILogger<IdentityService> logger,
+    IHostApplicationLifetime hostApplicationLifetime,
+    SettingsService settingsService) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -19,7 +23,8 @@ public class IdentityService(IConfiguration config, ILogger<IdentityService> log
             {
                 if (ex.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Unauthorized)
                 {
-                    logger.LogCritical("Invalid or expired license! Please visit https://classinsights.at and contact us! ");
+                    logger.LogCritical(
+                        "Invalid or expired license! Please visit https://classinsights.at and contact us! ");
                     hostApplicationLifetime.StopApplication();
                 }
             }
@@ -30,25 +35,25 @@ public class IdentityService(IConfiguration config, ILogger<IdentityService> log
     {
         if (config["License"] is not { } license)
             throw new InvalidOperationException("License is not configured");
-        
+
         var client = new HttpClient();
         var server = config["Server"]!;
         client.BaseAddress = new Uri($"{server}/api/");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", license);
-        
+
         var loginResponse = await client.PostAsync("login", null);
         loginResponse.EnsureSuccessStatusCode();
-        
+
         var tokens = await loginResponse.Content.ReadFromJsonAsync<TokenDto>();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens?.AccessToken);
-        
+
         var schoolResponse = await client.GetAsync("school");
         schoolResponse.EnsureSuccessStatusCode();
 
-        var school = await schoolResponse.Content.ReadFromJsonAsync<ServerDto.SchoolDto>();
+        var school = await schoolResponse.Content.ReadFromJsonAsync<SchoolDto>();
         if (school is null)
             throw new InvalidOperationException("Your license is invalid");
-        
+
         await settingsService.SetSettingAsync("school", school);
     }
 }

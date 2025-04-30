@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using NodaTime;
+﻿using NodaTime;
 
 namespace Api.Models.Database;
 
-public partial class User
+public class User
 {
     public long UserId { get; set; }
 
@@ -15,5 +13,4 @@ public partial class User
     public string Email { get; set; } = null!;
 
     public Instant? LastSeen { get; set; }
-
 }

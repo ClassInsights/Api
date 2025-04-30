@@ -4,12 +4,15 @@ namespace Api.Services;
 
 public class SettingsService
 {
-    private readonly ILogger<SettingsService> _logger;
     private readonly SemaphoreSlim _cacheLock = new(1, 1);
-    private const string FilePath = "data/settings.json";
+    private readonly string _filePath = Path.Combine(AppContext.BaseDirectory, "data", "settings.json");
+    private readonly ILogger<SettingsService> _logger;
+
+    private readonly JsonSerializerOptions _serializerOptions =
+        new() { WriteIndented = true, PropertyNameCaseInsensitive = true };
+
     private Dictionary<string, object> _settingsCache = new();
-    private readonly JsonSerializerOptions _serializerOptions = new() { WriteIndented = true, PropertyNameCaseInsensitive = true};
-    
+
     public SettingsService(ILogger<SettingsService> logger)
     {
         _logger = logger;
@@ -18,18 +21,15 @@ public class SettingsService
 
     private async Task LoadSettingsAsync()
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-        if (!File.Exists(FilePath))
+        Directory.CreateDirectory(Path.GetDirectoryName(_filePath)!);
+        if (!File.Exists(_filePath))
             return;
 
         try
         {
-            var json = await File.ReadAllTextAsync(FilePath);
+            var json = await File.ReadAllTextAsync(_filePath);
             var settings = JsonSerializer.Deserialize<Dictionary<string, object>>(json, _serializerOptions);
-            if (settings != null)
-            {
-                _settingsCache = settings;
-            }
+            if (settings != null) _settingsCache = settings;
         }
         catch (Exception ex)
         {
@@ -43,12 +43,14 @@ public class SettingsService
             return Task.FromResult(default(T));
         try
         {
-            return Task.FromResult(JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(jsonValue, _serializerOptions)));
+            return Task.FromResult(
+                JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(jsonValue, _serializerOptions)));
         }
         catch (JsonException ex)
         {
             _logger.LogError(ex, "Failed to parse settings");
         }
+
         return Task.FromResult(default(T));
     }
 
@@ -73,9 +75,9 @@ public class SettingsService
             var json = JsonSerializer.Serialize(_settingsCache, _serializerOptions);
 
             // Atomic Write
-            const string tempFile = FilePath + ".tmp";
+            var tempFile = _filePath + ".tmp";
             await File.WriteAllTextAsync(tempFile, json);
-            File.Move(tempFile, FilePath, true);
+            File.Move(tempFile, _filePath, true);
         }
         catch (Exception ex)
         {

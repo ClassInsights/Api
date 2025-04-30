@@ -1,31 +1,32 @@
+using System.ComponentModel;
+
 namespace Api.Models.Dto;
 
 public class SettingsDto
 {
     public class Dashboard
     {
-        // check if there are gaps between lessons 
+        [Description("Check if there are gaps between lessons")]
         public bool CheckGap { get; set; } = true;
-        
-        // how long can a gap between lessons be
+
+        [Description("Valid gap between lessons without shutdown")]
         public int LessonGapMinutes { get; set; } = 20;
-        
-        // how long until a shutdown should be sent if no lessons
+
+        [Description("Time until a shutdown should be sent if no lessons left")]
         public int NoLessonsTime { get; set; } = 50;
-        
-        // check if any user is logged in
+
+        [Description("Shutdown if no user is logged in")]
         public bool CheckUser { get; set; } = true;
-        
-        // check if user is active
+
+        [Description("Shutdown if user is not active")]
         public bool CheckAfk { get; set; } = true;
-        
-        // how long can user be inactive until shutdown
+
+        [Description("Time until a user is considered afk")]
         public int AfkTimeout { get; set; } = 15;
-        
-        // wait after lessons before shutdown
-        public bool DelayShutdown { get; set; } = true;
-        
-        // how long should be waited before shutdown
+
+        [Description("Delay shutdown")] public bool DelayShutdown { get; set; } = true;
+
+        [Description("Delay in minutes before shutdown is sent")]
         public int ShutdownDelay { get; set; } = 3;
     }
 }

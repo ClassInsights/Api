@@ -1,22 +1,25 @@
 using System.Text;
 using System.Threading.RateLimiting;
 using Api;
+using Api.Extensions;
 using Api.Models.Database;
 using Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using NodaTime;
 using NodaTime.Serialization.SystemTextJson;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddEnvironmentVariables(prefix: "CI_");
+builder.Configuration.AddEnvironmentVariables("CI_");
 
-builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb));
+builder.Services.AddControllers()
+    .AddJsonOptions(options => options.JsonSerializerOptions.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb));
 
-// Add clock instance
+// Add the clock instance
 builder.Services.AddSingleton<IClock>(SystemClock.Instance);
 
 // Add database connection
@@ -31,11 +34,11 @@ builder.Services.AddSingleton<SettingsService>();
 builder.Services.AddHttpClient();
 
 // add authentication
-builder.Services.AddAuthentication(c =>
+builder.Services.AddAuthentication(options =>
 {
-    c.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    c.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    c.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
@@ -65,34 +68,8 @@ if (builder.Environment.IsProduction())
 // Add identity Service
 builder.Services.AddHostedService<IdentityService>();
 
-// configure swagger
-builder.Services.AddSwaggerGen(options =>
-{
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        Description = "Please enter a valid token"
-    });
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Name = "Bearer",
-                In = ParameterLocation.Header,
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
-});
+// Add OpenAPI
+builder.Services.AddOpenApi(options => options.AddBearerTokenAuthentication());
 
 // Enable CORS
 builder.Services.AddCors(options =>
@@ -133,11 +110,15 @@ if (app.Environment.IsProduction())
 // Configure the HTTP request pipeline and Swagger
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
+    app.MapOpenApi();
+    app.MapScalarApiReference(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-        options.RoutePrefix = "docs";
+        options.Title = "ClassInsights API";
+        options.Theme = ScalarTheme.Kepler;
+        options.Authentication = new ScalarAuthenticationOptions
+        {
+            PreferredSecurityScheme = IdentityConstants.BearerScheme
+        };
     });
 }
 

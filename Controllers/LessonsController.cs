@@ -6,19 +6,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Api.Controllers;
 
-/// <inheritdoc />
 [Route("api/[controller]")]
 [ApiController]
 public class LessonsController(ClassInsightsContext context, IMapper mapper) : ControllerBase
 {
-    /// <summary>
-    ///     Find all available Lessons
-    /// </summary>
-    /// <returns><see cref="List{T}" /> whose generic type argument is <see cref="ApiDto.LessonDto" /></returns>
     [HttpGet]
+    [EndpointSummary("Find all available Lessons")]
+    [ProducesResponseType<LessonDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllLessons()
     {
         var lessons = await context.Lessons.AsNoTracking().ToListAsync();
-        return Ok(mapper.Map<List<ApiDto.LessonDto>>(lessons));
+        return Ok(mapper.Map<List<LessonDto>>(lessons));
     }
 }

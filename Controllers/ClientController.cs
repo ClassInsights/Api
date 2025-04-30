@@ -1,15 +1,17 @@
+using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ClientController(IHttpClientFactory httpClientFactory, ILogger<ClientController> logger): ControllerBase
+public class ClientController(IHttpClientFactory httpClientFactory, ILogger<ClientController> logger) : ControllerBase
 {
     private const string ClientVersion = "1.0.0.1";
     private const string DownloadBaseUrl = "https://github.com/ClassInsights/WinService/releases/download";
-    
+
     [HttpGet("version")]
+    [EndpointSummary("Get supported client version")]
     public IActionResult GetInfo()
     {
         return Ok(new
@@ -19,6 +21,7 @@ public class ClientController(IHttpClientFactory httpClientFactory, ILogger<Clie
     }
 
     [HttpGet("download")]
+    [EndpointSummary("Download latest, supported client installer")]
     public async Task<IActionResult> GetLatestVersion(CancellationToken cancellationToken)
     {
         const string fileName = $"ClassInsights_{ClientVersion}.msi";
@@ -28,7 +31,7 @@ public class ClientController(IHttpClientFactory httpClientFactory, ILogger<Clie
         if (System.IO.File.Exists(filePath))
         {
             logger.LogInformation("Serving saved file: {FilePath}", filePath);
-            return PhysicalFile(filePath, System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
+            return PhysicalFile(filePath, MediaTypeNames.Application.Octet, fileName);
         }
 
         try
@@ -54,6 +57,6 @@ public class ClientController(IHttpClientFactory httpClientFactory, ILogger<Clie
             return StatusCode(500, "An error occurred while processing the request.");
         }
 
-        return PhysicalFile(filePath, System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
+        return PhysicalFile(filePath, MediaTypeNames.Application.Octet, fileName);
     }
 }

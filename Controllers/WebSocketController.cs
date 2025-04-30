@@ -8,8 +8,6 @@ using NodaTime;
 
 namespace Api.Controllers;
 
-/// <inheritdoc />
-[ApiExplorerSettings(IgnoreApi = true)] // ignore in swagger
 public class WebSocketController(IClock clock, ClassInsightsContext context) : ControllerBase
 {
     /// <summary>

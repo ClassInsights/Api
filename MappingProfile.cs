@@ -8,15 +8,16 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        CreateMap<MasterDataObjectDto, Room>().ForMember(dest => dest.RoomId, opt => opt.MapFrom(src => src.Id));
-        CreateMap<MasterDataObjectDto, Subject>().ForMember(dest => dest.SubjectId, opt => opt.MapFrom(src => src.Id));
-        CreateMap<MasterDataObjectDto, Class>().ForMember(dest => dest.ClassId, opt => opt.MapFrom(src => src.Id));
-        CreateMap<ApiDto.RoomDto, Room>();
-        CreateMap<ApiDto.ClassDto, Class>().ReverseMap();
-        CreateMap<ApiDto.LessonDto, Lesson>().ReverseMap();
-        CreateMap<ApiDto.SubjectDto, Subject>().ReverseMap();
-        CreateMap<ApiDto.ComputerDto, Computer>().ReverseMap();
-        CreateMap<Room, ApiDto.RoomDto>()
-            .ConstructUsing(x => new ApiDto.RoomDto(x.RoomId, x.Enabled, x.DisplayName, x.Regex, null));
+        CreateMap<UntisMasterDataObject, Room>().ForMember(dest => dest.RoomId, opt => opt.MapFrom(src => src.Id));
+        CreateMap<UntisMasterDataObject, Subject>()
+            .ForMember(dest => dest.SubjectId, opt => opt.MapFrom(src => src.Id));
+        CreateMap<UntisMasterDataObject, Class>().ForMember(dest => dest.ClassId, opt => opt.MapFrom(src => src.Id));
+        CreateMap<RoomDto, Room>();
+        CreateMap<ClassDto, Class>().ReverseMap();
+        CreateMap<LessonDto, Lesson>().ReverseMap();
+        CreateMap<SubjectDto, Subject>().ReverseMap();
+        CreateMap<ComputerDto, Computer>().ReverseMap();
+        CreateMap<Room, RoomDto>()
+            .ConstructUsing(x => new RoomDto(x.RoomId, x.Enabled, x.DisplayName, x.Regex, null));
     }
 }

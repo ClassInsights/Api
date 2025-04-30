@@ -12,16 +12,17 @@ using NodaTime;
 
 namespace Api.Controllers;
 
-/// <inheritdoc />
 [Route("api/")]
 [ApiController]
-public class UserController(IConfiguration config, IClock clock, IHttpClientFactory httpClientFactory, SettingsService settingsService, ClassInsightsContext context) : ControllerBase
+public class UserController(
+    IConfiguration config,
+    IClock clock,
+    IHttpClientFactory httpClientFactory,
+    SettingsService settingsService,
+    ClassInsightsContext context) : ControllerBase
 {
-    /// <summary>
-    ///     Logs user out
-    /// </summary>
-    /// <returns></returns>
     [HttpDelete("user")]
+    [EndpointSummary("Logout user")]
     public async Task<IActionResult> LogoutUser()
     {
         var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -38,11 +39,16 @@ public class UserController(IConfiguration config, IClock clock, IHttpClientFact
         return Ok();
     }
 
-    [HttpPost("user"), AllowAnonymous]
-    public async Task<IActionResult> LoginUser([FromBody] ApiDto.DashboardTokenDto token)
+    [HttpPost("user")]
+    [AllowAnonymous]
+    [EndpointSummary("Login user")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> LoginUser([FromBody] DashboardTokenDto token)
     {
         using var client = httpClientFactory.CreateClient();
-        
+
         var server = config["Server"]!;
         var response = await client.PostAsJsonAsync($"{server}/api/school/dashboard/user", new
         {
@@ -51,16 +57,17 @@ public class UserController(IConfiguration config, IClock clock, IHttpClientFact
 
         if (!response.IsSuccessStatusCode)
             return Unauthorized();
-        
-        if (await settingsService.GetSettingAsync<ServerDto.SchoolDto>("school") is not { } schoolDto)
+
+        if (await settingsService.GetSettingAsync<SchoolDto>("school") is not { } schoolDto)
             return NotFound();
-        
-        var userDto = await response.Content.ReadFromJsonAsync<ServerDto.UserDto>(JsonSerializerOptions.Web);
+
+        var userDto = await response.Content.ReadFromJsonAsync<UserDto>(JsonSerializerOptions.Web);
         var userSchoolDto = userDto?.Schools.FirstOrDefault(s => s.SchoolId == schoolDto.SchoolId);
-        
-        if (userSchoolDto == null || !userSchoolDto.Roles.Contains("Admin") && !userSchoolDto.Roles.Contains("Teacher"))
+
+        if (userSchoolDto == null ||
+            (!userSchoolDto.Roles.Contains("Admin") && !userSchoolDto.Roles.Contains("Teacher")))
             return Unauthorized();
-        
+
         var user = context.Users.Update(new User
         {
             AzureUserId = userDto!.AzureUserId,
@@ -71,44 +78,43 @@ public class UserController(IConfiguration config, IClock clock, IHttpClientFact
 
         await context.SaveChangesAsync();
         var claims = new ClaimsIdentity();
-        
+
         claims.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Entity.UserId.ToString()));
         claims.AddClaim(new Claim(JwtRegisteredClaimNames.Name, userDto.Username));
         claims.AddClaim(new Claim(JwtRegisteredClaimNames.Email, userDto.Email));
         claims.AddClaim(new Claim("school_name", schoolDto.Name));
-        claims.AddClaim(new Claim(ClaimTypes.Role, JsonSerializer.Serialize(userSchoolDto.Roles), JsonClaimValueTypes.JsonArray));
+        claims.AddClaim(new Claim(ClaimTypes.Role, JsonSerializer.Serialize(userSchoolDto.Roles),
+            JsonClaimValueTypes.JsonArray));
 
-        return Ok(new
-        {
-            access_token = GenJwtToken(claims)
-        });
+        return Ok(new TokenDto(GenJwtToken(claims), "Bearer"));
     }
 
-    /// <summary>
-    ///     Login endpoint for computers
-    /// </summary>
-    /// <returns>Jwt Bearer Token</returns>
-    [HttpPost("login/computer"), AllowAnonymous]
-    public IActionResult LoginComputer([FromBody] ApiDto.ComputerTokenDto tokenDto)
+    [HttpPost("login/computer")]
+    [AllowAnonymous]
+    [EndpointSummary("Login endpoint for computers")]
+    [ProducesResponseType<string>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public IActionResult LoginComputer([FromBody] ComputerTokenDto tokenDto)
     {
         if (tokenDto.ComputerToken != config["ComputerToken"])
             return Unauthorized();
-        
+
         var claims = new ClaimsIdentity();
         claims.AddClaim(new Claim(ClaimTypes.Role, "Computer"));
 
         var token = GenJwtToken(claims);
-        return token == null ? Unauthorized() : Ok(token);
+        return Ok(token);
     }
 
-    private string? GenJwtToken(ClaimsIdentity subject)
+    private string GenJwtToken(ClaimsIdentity subject)
     {
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = subject,
             Expires = DateTime.UtcNow.AddDays(2),
             Issuer = "ClassInsights",
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["JwtKey"]!)),
+            SigningCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["JwtKey"]!)),
                 SecurityAlgorithms.HmacSha256)
         };
 

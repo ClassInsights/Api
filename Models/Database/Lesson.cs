@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using NodaTime;
+﻿using NodaTime;
 
 namespace Api.Models.Database;
 
-public partial class Lesson
+public class Lesson
 {
     public long LessonId { get; set; }
 

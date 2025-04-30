@@ -5,17 +5,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Api.Controllers;
 
-/// <inheritdoc />
 [Route("api/[controller]")]
 [ApiController]
 public class LogsController(ClassInsightsContext context) : ControllerBase
 {
-    /// <summary>
-    ///     Find all Logs
-    /// </summary>
-    /// <returns></returns>
     [HttpGet]
     [Authorize(Roles = "Admin")]
+    [EndpointSummary("Find all Logs")]
+    [ProducesResponseType<List<Log>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetLogs()
     {
         return Ok(await context.Logs.AsNoTracking().ToListAsync());

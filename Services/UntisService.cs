@@ -21,9 +21,9 @@ public class UntisService(
     IConfiguration configuration) : BackgroundService
 {
     private readonly Lock _lock = new();
-    private TokenDto? _tokenResponse;
-    private Instant? _lastFetch;
     private int _fetchCount;
+    private Instant? _lastFetch;
+    private TokenDto? _tokenResponse;
     private bool FetchAllLessons => _fetchCount % 10 == 0; // fetch all lessons every 10 fetches
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -51,21 +51,24 @@ public class UntisService(
             await using var scope = serviceScope.CreateAsyncScope();
             var context = scope.ServiceProvider.GetRequiredService<ClassInsightsContext>();
 
-            TimetableDto? timetable;
+            UntisTimetable? timetable;
 
             if (force || !await context.Rooms.AsNoTracking().AnyAsync())
                 // get timetable for all rooms 
+            {
                 timetable = await GetTimetableAsync();
+            }
             else
             {
                 // get timetable for classinsights rooms
-                var roomIds = await context.Rooms.AsNoTracking().Where(x => x.Computers.Count > 0).Select(x => x.RoomId).ToArrayAsync();
+                var roomIds = await context.Rooms.AsNoTracking().Where(x => x.Computers.Count > 0).Select(x => x.RoomId)
+                    .ToArrayAsync();
                 if (roomIds.Length <= 0)
                     return; // don't request timetable if classinsights isn't installed anywhere
                 timetable = await GetTimetableAsync(roomIds);
             }
 
-            if (timetable.HeaderData is { SchoolYearEnd: { } endDate, SchoolYearStart: { } startDate })
+            if (timetable.UntisHeaderData is { SchoolYearEnd: { } endDate, SchoolYearStart: { } startDate })
             {
                 await settingsService.SetSettingAsync("SchoolYearStart",
                     startDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
@@ -76,25 +79,32 @@ public class UntisService(
             // update classes, rooms and subjects
             await UpdateMasterDataAsync(timetable, context);
 
-            if (timetable.TimetableData.Periods is { Count: > 0 } periods)
+            if (timetable.UntisTimetableData.Periods is { Count: > 0 } periods)
             {
                 var tz = DateTimeZoneProviders.Tzdb.GetSystemDefault();
-                
+
                 // delete all lessons on full fetch
                 if (FetchAllLessons)
+                {
                     await context.Lessons.ExecuteDeleteAsync();
+                }
                 else
                 {
-                    var cancelledLessons = periods.Where(x => x.Status == PeriodStatusEnum.CANCELLED).Select(x => x.Id).ToList();
+                    var cancelledLessons = periods.Where(x => x.Status == UntisPeriodStatus.Cancelled).Select(x => x.Id)
+                        .ToList();
                     if (cancelledLessons.Count > 0)
-                        await context.Lessons.Where(lesson => cancelledLessons.Contains(lesson.PeriodId)).ExecuteDeleteAsync();
+                        await context.Lessons.Where(lesson => cancelledLessons.Contains(lesson.PeriodId))
+                            .ExecuteDeleteAsync();
                 }
-                
+
                 List<Lesson> lessons = (from period in periods
-                    where period.Status is not PeriodStatusEnum.CANCELLED
-                    from classDto in period.Classes where classDto.Status is not ResourceStatusEnum.REMOVED
-                    from subjects in period.Subjects where subjects.Status is not ResourceStatusEnum.REMOVED
-                    from room in period.Rooms where room.Status is not ResourceStatusEnum.REMOVED
+                    where period.Status is not UntisPeriodStatus.Cancelled
+                    from classDto in period.Classes
+                    where classDto.Status is not UntisResourceStatus.Removed
+                    from subjects in period.Subjects
+                    where subjects.Status is not UntisResourceStatus.Removed
+                    from room in period.Rooms
+                    where room.Status is not UntisResourceStatus.Removed
                     select new Lesson
                     {
                         PeriodId = period.Id,
@@ -116,34 +126,36 @@ public class UntisService(
         }
     }
 
-    private async Task UpdateMasterDataAsync(TimetableDto timetable, ClassInsightsContext context)
+    private async Task UpdateMasterDataAsync(UntisTimetable untisTimetable, ClassInsightsContext context)
     {
-        if (timetable.MasterData.Rooms is { Count: > 0 } rooms)
+        if (untisTimetable.UntisMasterData.Rooms is { Count: > 0 } rooms)
         {
             var dbRooms = mapper.Map<List<Room>>(rooms);
-            await context.BulkInsertOrUpdateAsync(dbRooms, config =>
-            {
-                config.PropertiesToExclude = [nameof(Room.Regex), nameof(Room.Enabled)];
-            });
+            await context.BulkInsertOrUpdateAsync(dbRooms,
+                config => { config.PropertiesToExclude = [nameof(Room.Regex), nameof(Room.Enabled)]; });
         }
 
-        if (timetable.MasterData.Subjects is { Count: > 0 } subjects)
+        if (untisTimetable.UntisMasterData.Subjects is { Count: > 0 } subjects)
         {
             var dbSubjects = mapper.Map<List<Subject>>(subjects);
             await context.BulkInsertOrUpdateAsync(dbSubjects);
         }
 
-        if (timetable.MasterData.Classes is { Count: > 0 } classes)
+        if (untisTimetable.UntisMasterData.Classes is { Count: > 0 } classes)
         {
             var dbClasses = mapper.Map<List<Class>>(classes);
             await context.BulkInsertOrUpdateAsync(dbClasses);
         }
     }
-    
-    private async Task<TimetableDto> GetTimetableAsync(long[]? roomIds = null)
+
+    private async Task<UntisTimetable> GetTimetableAsync(long[]? roomIds = null)
     {
         var server = configuration["Server"]!;
-        var response = await CallApiEndpointAsync($"{server}/api/untis/timetable" + (roomIds == null ? "" : $"?room={string.Join("&room=", roomIds)}&lastModified={(FetchAllLessons ? "" : _lastFetch?.InZone(DateTimeZoneProviders.Tzdb.GetSystemDefault()).ToString(InstantPattern.ExtendedIso.PatternText, CultureInfo.InvariantCulture))}"), HttpMethod.Get);
+        var response = await CallApiEndpointAsync(
+            $"{server}/api/untis/timetable" + (roomIds == null
+                ? ""
+                : $"?room={string.Join("&room=", roomIds)}&lastModified={(FetchAllLessons ? "" : _lastFetch?.InZone(DateTimeZoneProviders.Tzdb.GetSystemDefault()).ToString(InstantPattern.ExtendedIso.PatternText, CultureInfo.InvariantCulture))}"),
+            HttpMethod.Get);
 
         response.EnsureSuccessStatusCode();
 
@@ -151,7 +163,7 @@ public class UntisService(
         options.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
 
         _lastFetch = clock.GetCurrentInstant();
-        return await response.Content.ReadFromJsonAsync<TimetableDto>(options) ??
+        return await response.Content.ReadFromJsonAsync<UntisTimetable>(options) ??
                throw new NullReferenceException("Timetable response is null");
     }
 
