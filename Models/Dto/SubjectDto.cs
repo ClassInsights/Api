@@ -7,6 +7,6 @@ public record SubjectDto(
     [property: Description("Id of the subject")]
     long SubjectId,
     [property: Description("Name of the subject")]
-    [property: MaxLength(100)]
+    [MaxLength(100)]
     string DisplayName
 );

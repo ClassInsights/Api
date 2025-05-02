@@ -9,21 +9,21 @@ public record ComputerDto(
     long ComputerId,
     [property: Description("Id of the room the computer is in")]
     long RoomId,
-    [property: MaxLength(50)]
+    [MaxLength(50)]
     [property: Description("Name of the computer")]
     string Name,
-    [property: MaxLength(50)]
+    [MaxLength(17)]
     [property: Description("Mac address of the computer")]
     string? MacAddress,
-    [property: MaxLength(50)]
+    [MaxLength(12)]
     [property: Description("Ip address of the computer")]
     string? IpAddress,
     [property: Description("Last time the computer was active")]
     Instant LastSeen,
-    [property: MaxLength(75)]
+    [MaxLength(50)]
     [property: Description("Name of the last user that logged in on the computer")]
     string? LastUser,
-    [property: MaxLength(20)]
+    [MaxLength(10)]
     [property: Description("Version of the client installed on the computer")]
     string? Version
 )
