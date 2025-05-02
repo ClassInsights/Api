@@ -17,6 +17,7 @@ public class ComputersController(ClassInsightsContext context, IMapper mapper) :
     [HttpPost]
     [Authorize(Roles = "Computer")]
     [EndpointSummary("Add or update a computer")]
+    [ProducesResponseType<ComputerDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateComputer(
         [Description("Computer which you want to add or update")] ComputerDto computerDto)
     {
@@ -30,6 +31,7 @@ public class ComputersController(ClassInsightsContext context, IMapper mapper) :
 
     [HttpGet]
     [EndpointSummary("Find all computers")]
+    [ProducesResponseType<List<ComputerDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetComputers()
     {
         var computers = await context.Computers.AsNoTracking().ToListAsync();

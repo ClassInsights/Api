@@ -14,6 +14,7 @@ public class ClassesController(IClock clock, ClassInsightsContext context, IMapp
 {
     [HttpGet]
     [EndpointSummary("Find all classes")]
+    [ProducesResponseType<List<ClassDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllClasses()
     {
         var classes = await context.Classes.AsNoTracking().ToListAsync();
@@ -22,7 +23,7 @@ public class ClassesController(IClock clock, ClassInsightsContext context, IMapp
 
     [HttpGet("{name}")]
     [EndpointSummary("Find class by name")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<ClassDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetClass([Description("The name of the class you search")] string name)
     {
@@ -33,7 +34,7 @@ public class ClassesController(IClock clock, ClassInsightsContext context, IMapp
 
     [HttpGet("{classId:int}")]
     [EndpointSummary("Find Class by id")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<ClassDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetClassById([Description("The id of the class you search")] int classId)
     {
@@ -44,6 +45,7 @@ public class ClassesController(IClock clock, ClassInsightsContext context, IMapp
 
     [HttpGet("{classId:int}/currentLesson")]
     [EndpointSummary("Find the current lesson of a class by id")]
+    [ProducesResponseType<LessonDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCurrentLesson(
         [Description("The id of the class of which you want the current lesson")] int classId)
     {

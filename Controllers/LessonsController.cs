@@ -12,7 +12,7 @@ public class LessonsController(ClassInsightsContext context, IMapper mapper) : C
 {
     [HttpGet]
     [EndpointSummary("Find all available Lessons")]
-    [ProducesResponseType<LessonDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<List<LessonDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllLessons()
     {
         var lessons = await context.Lessons.AsNoTracking().ToListAsync();
