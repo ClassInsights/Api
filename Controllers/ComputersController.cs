@@ -49,7 +49,7 @@ public class ComputersController(ClassInsightsContext context, IMapper mapper) :
         return NotFound();
     }
 
-    [HttpPost]
+    [HttpPost("commands")]
     [EndpointSummary("Send commands to computers")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [Authorize(Roles = "Teacher, Admin")]
