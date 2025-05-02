@@ -7,13 +7,12 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using NodaTime;
 
 namespace Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ComputersController(IClock clock, ClassInsightsContext context, IMapper mapper) : ControllerBase
+public class ComputersController(ClassInsightsContext context, IMapper mapper) : ControllerBase
 {
     [HttpPost]
     [Authorize(Roles = "Computer")]
@@ -48,33 +47,30 @@ public class ComputersController(IClock clock, ClassInsightsContext context, IMa
         return NotFound();
     }
 
-    [HttpPatch("{computerId:int}/{command}")]
-    [Authorize(Roles = "Teacher, Admin")]
-    [EndpointSummary("Send command to computer")]
+    [HttpPost]
+    [EndpointSummary("Send commands to computers")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> SendCommand([Description("ID of the target computer")] int computerId,
-        [Description("Action which should be performed (shutdown, restart, logoff)")] string command)
+    [Authorize(Roles = "Teacher, Admin")]
+    public IActionResult SendCommands(List<SendCommandDto> entries)
+    {
+        foreach (var entry in entries)
+            _ = Task.Run(async () => await SendCommand(entry.ComputerId, entry.Command));
+        
+        // todo: re-add logging
+        return Ok();
+    }
+    
+    private static async Task SendCommand(long computerId, string command)
     {
         if (!WebSocketController.ComputerWebSockets.TryGetValue(computerId, out var computerWs))
-            return NotFound();
+            return;
 
         // check if websocket is still alive
         if (computerWs.State != WebSocketState.Open)
-            return NotFound();
+            return;
 
         // send command
         await computerWs.SendAsync(Encoding.UTF8.GetBytes(command), WebSocketMessageType.Text, true,
             CancellationToken.None);
-
-        var computer = await context.Computers.FindAsync(computerId);
-        context.Logs.Add(new Log
-        {
-            Message = $"Send {command} to '{computer?.Name}' (Id: {computerId})",
-            Username = HttpContext.User.FindFirst("name")?.Value ?? "No username found in Token",
-            Date = clock.GetCurrentInstant()
-        });
-        await context.SaveChangesAsync();
-        return Ok();
     }
 }

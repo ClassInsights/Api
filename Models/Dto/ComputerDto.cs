@@ -31,3 +31,11 @@ public record ComputerDto(
     [Description("Status of the computer (Online or Offline)")]
     public bool Online => LastSeen > SystemClock.Instance.GetCurrentInstant().Minus(Duration.FromSeconds(10));
 }
+
+public record SendCommandDto(
+    [property: Description("Command you want to send")]
+    [property: MaxLength(25)]
+    string Command,
+    [property: Description("Id of the computer")]
+    long ComputerId
+);
