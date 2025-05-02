@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using Api.Models.Database;
 using Api.Models.Dto;
-using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
@@ -10,7 +9,7 @@ namespace Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ClassesController(IClock clock, ClassInsightsContext context, IMapper mapper) : ControllerBase
+public class ClassesController(IClock clock, ClassInsightsContext context) : ControllerBase
 {
     [HttpGet]
     [EndpointSummary("Find all classes")]
@@ -18,7 +17,7 @@ public class ClassesController(IClock clock, ClassInsightsContext context, IMapp
     public async Task<IActionResult> GetAllClasses()
     {
         var classes = await context.Classes.AsNoTracking().ToListAsync();
-        return Ok(mapper.Map<List<ClassDto>>(classes));
+        return Ok(classes.Select(x => x.ToDto()).ToList());
     }
 
     [HttpGet("{name}")]
@@ -28,7 +27,7 @@ public class ClassesController(IClock clock, ClassInsightsContext context, IMapp
     public async Task<IActionResult> GetClass([Description("The name of the class you search")] string name)
     {
         if (await context.Classes.AsNoTracking().FirstOrDefaultAsync(x => x.DisplayName == name) is { } dbClass)
-            return Ok(mapper.Map<ClassDto>(dbClass));
+            return Ok(dbClass.ToDto());
         return NotFound();
     }
 
@@ -40,14 +39,15 @@ public class ClassesController(IClock clock, ClassInsightsContext context, IMapp
     {
         if (await context.Classes.FindAsync(classId) is not { } dbClass)
             return NotFound();
-        return Ok(mapper.Map<ClassDto>(dbClass));
+        return Ok(dbClass.ToDto());
     }
 
     [HttpGet("{classId:int}/currentLesson")]
     [EndpointSummary("Find the current lesson of a class by id")]
     [ProducesResponseType<LessonDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCurrentLesson(
-        [Description("The id of the class of which you want the current lesson")] int classId)
+        [Description("The id of the class of which you want the current lesson")]
+        int classId)
     {
         // receive all lessons of class
         var lessons = await context.Lessons.Where(x => x.ClassId == classId).ToListAsync();
@@ -61,6 +61,6 @@ public class ClassesController(IClock clock, ClassInsightsContext context, IMapp
         if (currentLesson == null)
             return Ok();
 
-        return Ok(mapper.Map<LessonDto>(currentLesson));
+        return Ok(currentLesson.ToDto());
     }
 }

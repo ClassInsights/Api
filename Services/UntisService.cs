@@ -3,7 +3,6 @@ using System.Net;
 using System.Text.Json;
 using Api.Models.Database;
 using Api.Models.Dto;
-using AutoMapper;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
@@ -15,7 +14,6 @@ namespace Api.Services;
 public class UntisService(
     ILogger<UntisService> logger,
     SettingsService settingsService,
-    IMapper mapper,
     IClock clock,
     IServiceScopeFactory serviceScope,
     IConfiguration configuration) : BackgroundService
@@ -130,21 +128,34 @@ public class UntisService(
     {
         if (untisTimetable.UntisMasterData.Rooms is { Count: > 0 } rooms)
         {
-            var dbRooms = mapper.Map<List<Room>>(rooms);
+            var dbRooms = rooms.Select(x => new Room
+            {
+                RoomId = x.Id,
+                DisplayName = x.DisplayName
+            }).ToList();
             await context.BulkInsertOrUpdateAsync(dbRooms,
                 config => { config.PropertiesToExclude = [nameof(Room.Regex), nameof(Room.Enabled)]; });
         }
 
         if (untisTimetable.UntisMasterData.Subjects is { Count: > 0 } subjects)
         {
-            var dbSubjects = mapper.Map<List<Subject>>(subjects);
+            var dbSubjects = subjects.Select(x => new Subject
+            {
+                SubjectId = x.Id,
+                DisplayName = x.DisplayName
+            }).ToList();
             await context.BulkInsertOrUpdateAsync(dbSubjects);
         }
 
         if (untisTimetable.UntisMasterData.Classes is { Count: > 0 } classes)
         {
-            var dbClasses = mapper.Map<List<Class>>(classes);
-            await context.BulkInsertOrUpdateAsync(dbClasses);
+            var dbClasses = classes.Select(x => new Class
+            {
+                ClassId = x.Id,
+                DisplayName = x.DisplayName
+            }).ToList();
+            await context.BulkInsertOrUpdateAsync(dbClasses,
+                config => { config.PropertiesToExclude = [nameof(Class.AzureGroupId)]; });
         }
     }
 

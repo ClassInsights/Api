@@ -30,7 +30,8 @@ public class SettingsController(SettingsService settingsService) : ControllerBas
     [Authorize(Roles = "Admin")]
     [EndpointSummary("Set dashboard settings")]
     public async Task<IActionResult> SetDashboardSettings(
-        [Description("New values for the dashboard settings")] SettingsDto.Dashboard settings)
+        [Description("New values for the dashboard settings")]
+        SettingsDto.Dashboard settings)
     {
         await settingsService.SetSettingAsync("dashboard", settings);
         return Ok();

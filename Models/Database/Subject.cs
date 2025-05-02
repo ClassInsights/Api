@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Api.Models.Dto;
 
 namespace Api.Models.Database;
 
@@ -16,4 +17,9 @@ public class Subject
     public string DisplayName { get; set; } = null!;
 
     public virtual ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();
+
+    public SubjectDto ToDto()
+    {
+        return new SubjectDto(SubjectId, DisplayName);
+    }
 }

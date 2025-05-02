@@ -15,15 +15,10 @@ public class User
     [MaxLength(250)]
     [Column("azure_user_id")]
     public string? AzureUserId { get; set; }
-    
-    [Column("username")]
-    [MaxLength(50)]
-    public string Username { get; set; } = null!;
 
-    [Column("email")]
-    [MaxLength(100)]
-    public string Email { get; set; } = null!;
+    [Column("username")] [MaxLength(50)] public string Username { get; set; } = null!;
 
-    [Column("last_seen")]
-    public Instant? LastSeen { get; set; }
+    [Column("email")] [MaxLength(100)] public string Email { get; set; } = null!;
+
+    [Column("last_seen")] public Instant? LastSeen { get; set; }
 }

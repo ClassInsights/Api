@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Api.Models.Database;
 using NodaTime;
 
 namespace Api.Models.Dto;
@@ -16,4 +17,18 @@ public record LessonDto(
     Instant? Start,
     [property: Description("Time when the lesson ends")]
     Instant? End
-);
+)
+{
+    public Lesson ToLesson()
+    {
+        return new Lesson
+        {
+            LessonId = LessonId,
+            RoomId = RoomId,
+            SubjectId = SubjectId,
+            ClassId = ClassId,
+            Start = Start,
+            End = End
+        };
+    }
+}

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Api.Models.Dto;
 
 namespace Api.Models.Database;
 
@@ -20,4 +21,9 @@ public class Class
     public string? AzureGroupId { get; set; }
 
     public virtual ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();
+
+    public ClassDto ToDto()
+    {
+        return new ClassDto(ClassId, DisplayName, AzureGroupId);
+    }
 }

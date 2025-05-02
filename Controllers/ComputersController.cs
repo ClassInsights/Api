@@ -3,7 +3,6 @@ using System.Net.WebSockets;
 using System.Text;
 using Api.Models.Database;
 using Api.Models.Dto;
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,21 +11,22 @@ namespace Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ComputersController(ClassInsightsContext context, IMapper mapper) : ControllerBase
+public class ComputersController(ClassInsightsContext context) : ControllerBase
 {
     [HttpPost]
     [Authorize(Roles = "Computer")]
     [EndpointSummary("Add or update a computer")]
     [ProducesResponseType<ComputerDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateComputer(
-        [Description("Computer which you want to add or update")] ComputerDto computerDto)
+        [Description("Computer which you want to add or update")]
+        ComputerDto computerDto)
     {
         // map to the database object to receive new ComputerId if it was created
-        var dbComputer = mapper.Map<Computer>(computerDto);
+        var dbComputer = computerDto.ToComputer();
         context.Update(dbComputer);
         await context.SaveChangesAsync();
 
-        return Ok(mapper.Map<ComputerDto>(dbComputer));
+        return Ok(dbComputer.ToDto());
     }
 
     [HttpGet]
@@ -35,7 +35,7 @@ public class ComputersController(ClassInsightsContext context, IMapper mapper) :
     public async Task<IActionResult> GetComputers()
     {
         var computers = await context.Computers.AsNoTracking().ToListAsync();
-        return Ok(mapper.Map<List<ComputerDto>>(computers));
+        return Ok(computers.Select(x => x.ToDto()));
     }
 
     [HttpGet("{name}")]
@@ -45,7 +45,7 @@ public class ComputersController(ClassInsightsContext context, IMapper mapper) :
     public async Task<IActionResult> GetComputer(string name)
     {
         if (await context.Computers.AsNoTracking().FirstOrDefaultAsync(x => x.Name.Contains(name)) is { } computer)
-            return Ok(mapper.Map<ComputerDto>(computer));
+            return Ok(computer.ToDto());
         return NotFound();
     }
 
@@ -57,11 +57,11 @@ public class ComputersController(ClassInsightsContext context, IMapper mapper) :
     {
         foreach (var entry in entries)
             _ = Task.Run(async () => await SendCommand(entry.ComputerId, entry.Command));
-        
+
         // todo: re-add logging
         return Ok();
     }
-    
+
     private static async Task SendCommand(long computerId, string command)
     {
         if (!WebSocketController.ComputerWebSockets.TryGetValue(computerId, out var computerWs))

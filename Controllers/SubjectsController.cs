@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using Api.Models.Database;
 using Api.Models.Dto;
-using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,14 +8,15 @@ namespace Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class SubjectsController(ClassInsightsContext context, IMapper mapper) : ControllerBase
+public class SubjectsController(ClassInsightsContext context) : ControllerBase
 {
     [HttpGet]
     [EndpointSummary("Find all subjects")]
     [ProducesResponseType<List<SubjectDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllSubjects()
     {
-        return Ok(mapper.Map<List<SubjectDto>>(await context.Subjects.ToListAsync()));
+        var subjects = await context.Subjects.AsNoTracking().ToListAsync();
+        return Ok(subjects.Select(x => x.ToDto()).ToList());
     }
 
     [HttpGet("{subjectId:int}")]
@@ -27,6 +27,6 @@ public class SubjectsController(ClassInsightsContext context, IMapper mapper) : 
     {
         if (await context.Subjects.FindAsync(subjectId) is not { } subject)
             return NotFound();
-        return Ok(mapper.Map<SubjectDto>(subject));
+        return Ok(subject.ToDto());
     }
 }

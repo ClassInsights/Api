@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Api.Models.Database;
 
 namespace Api.Models.Dto;
 
@@ -13,4 +14,16 @@ public record RoomDto(
     string? Regex,
     [property: Description("Number of devices in the room")]
     int? DeviceCount
-);
+)
+{
+    public Room ToRoom()
+    {
+        return new Room
+        {
+            RoomId = RoomId,
+            Enabled = Enabled,
+            DisplayName = DisplayName,
+            Regex = Regex
+        };
+    }
+}

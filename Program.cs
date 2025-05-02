@@ -1,6 +1,5 @@
 using System.Text;
 using System.Threading.RateLimiting;
-using Api;
 using Api.Extensions;
 using Api.Models.Database;
 using Api.Services;
@@ -54,9 +53,6 @@ builder.Services.AddAuthentication(options =>
 builder.Services.Configure<RouteOptions>(options => { options.LowercaseUrls = true; });
 
 builder.Services.AddAuthorization();
-
-// Auto Mapper
-builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 if (builder.Environment.IsProduction())
 {

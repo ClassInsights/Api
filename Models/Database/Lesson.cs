@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Api.Models.Dto;
 using NodaTime;
 
 namespace Api.Models.Database;
@@ -7,10 +8,8 @@ namespace Api.Models.Database;
 [Table("lesson")]
 public class Lesson
 {
-    [Key]
-    [Column("lesson_id")]
-    public long LessonId { get; set; }
-    
+    [Key] [Column("lesson_id")] public long LessonId { get; set; }
+
     [Column("room_id")]
     [ForeignKey("Room")]
     public long RoomId { get; set; }
@@ -23,16 +22,18 @@ public class Lesson
     [ForeignKey("Class")]
     public long ClassId { get; set; }
 
-    [Column("start")]
-    public Instant? Start { get; set; }
+    [Column("start")] public Instant? Start { get; set; }
 
-    [Column("end")]
-    public Instant? End { get; set; }
+    [Column("end")] public Instant? End { get; set; }
 
-    [Column("period_id")]
-    public long PeriodId { get; set; }
+    [Column("period_id")] public long PeriodId { get; set; }
 
     public virtual Class Class { get; set; } = null!;
     public virtual Room Room { get; set; } = null!;
     public virtual Subject Subject { get; set; } = null!;
+
+    public LessonDto ToDto()
+    {
+        return new LessonDto(LessonId, RoomId, SubjectId, ClassId, Start, End);
+    }
 }

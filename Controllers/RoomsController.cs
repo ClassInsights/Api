@@ -3,7 +3,6 @@ using System.Text.RegularExpressions;
 using Api.Models.Database;
 using Api.Models.Dto;
 using Api.Services;
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +13,7 @@ namespace Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class RoomsController(IClock clock, ClassInsightsContext context, UntisService untisService, IMapper mapper)
+public class RoomsController(IClock clock, ClassInsightsContext context, UntisService untisService)
     : ControllerBase
 {
     [HttpGet("{roomName}")]
@@ -24,15 +23,17 @@ public class RoomsController(IClock clock, ClassInsightsContext context, UntisSe
     public async Task<IActionResult> GetRoomByName([Description("Name of the room you want to find")] string roomName)
     {
         var room = await context.Rooms.FirstOrDefaultAsync(x => x.Regex != null && Regex.IsMatch(roomName, x.Regex));
-        var roomDto = mapper.Map<RoomDto>(room);
-        return roomDto == null ? NotFound() : Ok(roomDto);
+        if (room == null)
+            return NotFound();
+        return Ok(room.ToDto());
     }
 
     [HttpPatch("{roomId:long}")]
     [AllowAnonymous]
     [EndpointSummary("Update a room by id")]
     public async Task<IActionResult> UpdateRoom([Description("Id of the room you want to update")] long roomId,
-        [Description("The new values for the room")] RoomDto roomDto)
+        [Description("The new values for the room")]
+        RoomDto roomDto)
     {
         var room = await context.Rooms.FindAsync(roomId);
         if (room is null)
@@ -50,10 +51,11 @@ public class RoomsController(IClock clock, ClassInsightsContext context, UntisSe
     [ProducesResponseType<List<ComputerDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> GetComputersInRoom(
-        [Description("Id of the room you want to find the computers")] int roomId)
+        [Description("Id of the room you want to find the computers")]
+        int roomId)
     {
         var computers = await context.Computers.AsNoTracking().Where(x => x.RoomId == roomId).ToListAsync();
-        return Ok(mapper.Map<List<ComputerDto>>(computers));
+        return Ok(computers.Select(x => x.ToDto()).ToList());
     }
 
     [HttpGet("{roomId:int}/lessons")]
@@ -61,7 +63,8 @@ public class RoomsController(IClock clock, ClassInsightsContext context, UntisSe
     [ProducesResponseType<List<LessonDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> GetLessonsInRoom(
-        [Description("Id of the room you want to find the lessons")] int roomId)
+        [Description("Id of the room you want to find the lessons")]
+        int roomId)
     {
         var tz = DateTimeZoneProviders.Tzdb.GetSystemDefault();
         var today = clock.InTzdbSystemDefaultZone().GetCurrentDate();
@@ -69,7 +72,7 @@ public class RoomsController(IClock clock, ClassInsightsContext context, UntisSe
         var todayLessons = await context.Lessons.AsNoTracking()
             .Where(x => x.RoomId == roomId && x.Start.HasValue && x.Start.Value.InZone(tz).Date == today)
             .ToListAsync();
-        return Ok(mapper.Map<List<LessonDto>>(todayLessons));
+        return Ok(todayLessons.Select(x => x.ToDto()).ToList());
     }
 
     [HttpGet]

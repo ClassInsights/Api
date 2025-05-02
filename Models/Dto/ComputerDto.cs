@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using Api.Models.Database;
 using NodaTime;
 
 namespace Api.Models.Dto;
@@ -30,6 +31,21 @@ public record ComputerDto(
 {
     [Description("Status of the computer (Online or Offline)")]
     public bool Online => LastSeen > SystemClock.Instance.GetCurrentInstant().Minus(Duration.FromSeconds(10));
+
+    public Computer ToComputer()
+    {
+        return new Computer
+        {
+            ComputerId = ComputerId,
+            RoomId = RoomId,
+            Name = Name,
+            MacAddress = MacAddress,
+            IpAddress = IpAddress,
+            LastSeen = LastSeen,
+            LastUser = LastUser,
+            Version = Version
+        };
+    }
 }
 
 public record SendCommandDto(
