@@ -134,6 +134,7 @@ app.UseAuthorization();
 
 app.UseWebSockets();
 
-app.MapControllers().RequireAuthorization().RequireRateLimiting("defaultUserRateLimit");
+var controllers = app.MapControllers();
+if (!app.Environment.IsDevelopment()) controllers.RequireAuthorization().RequireRateLimiting("defaultUserRateLimit");
 
 app.Run();
