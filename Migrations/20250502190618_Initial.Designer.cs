@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Api.Migrations
 {
     [DbContext(typeof(ClassInsightsContext))]
-    [Migration("20250430180045_Initial")]
+    [Migration("20250502190618_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -50,8 +50,11 @@ namespace Api.Migrations
             modelBuilder.Entity("Api.Models.Database.Computer", b =>
                 {
                     b.Property<long>("ComputerId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
                         .HasColumnName("computer_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("ComputerId"));
 
                     b.Property<string>("IpAddress")
                         .HasMaxLength(12)

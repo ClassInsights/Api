@@ -86,7 +86,8 @@ namespace Api.Migrations
                 name: "computer",
                 columns: table => new
                 {
-                    computer_id = table.Column<long>(type: "bigint", nullable: false),
+                    computer_id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     room_id = table.Column<long>(type: "bigint", nullable: false),
                     name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     mac_address = table.Column<string>(type: "character varying(17)", maxLength: 17, nullable: true),

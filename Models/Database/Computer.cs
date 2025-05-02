@@ -10,7 +10,7 @@ public class Computer
 {
     [Key]
     [Column("computer_id")]
-    [DatabaseGenerated(DatabaseGeneratedOption.None)]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public long ComputerId { get; set; }
 
     [Column("room_id")]

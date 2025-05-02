@@ -47,8 +47,11 @@ namespace Api.Migrations
             modelBuilder.Entity("Api.Models.Database.Computer", b =>
                 {
                     b.Property<long>("ComputerId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
                         .HasColumnName("computer_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("ComputerId"));
 
                     b.Property<string>("IpAddress")
                         .HasMaxLength(12)
