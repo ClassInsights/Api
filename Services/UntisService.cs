@@ -15,6 +15,7 @@ public class UntisService(
     ILogger<UntisService> logger,
     SettingsService settingsService,
     IClock clock,
+    IHttpClientFactory httpClientFactory,
     IServiceScopeFactory serviceScope,
     IConfiguration configuration) : BackgroundService
 {
@@ -183,7 +184,7 @@ public class UntisService(
     {
         for (var i = 0; i < 3; i++)
         {
-            using var client = new HttpClient();
+            using var client = httpClientFactory.CreateClient();
             var accessToken = await GetAccessTokenAsync();
 
             var request = new HttpRequestMessage(method, endpoint) { Content = content };
@@ -224,7 +225,7 @@ public class UntisService(
             throw new InvalidOperationException("License is not configured");
 
         logger.LogInformation("Fetching new Access Token");
-        using var client = new HttpClient();
+        using var client = httpClientFactory.CreateClient();
         var server = configuration["Server"]!;
 
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {license}");

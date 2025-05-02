@@ -8,6 +8,7 @@ public class IdentityService(
     IConfiguration config,
     ILogger<IdentityService> logger,
     IHostApplicationLifetime hostApplicationLifetime,
+    IHttpClientFactory httpClientFactory,
     SettingsService settingsService) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -36,7 +37,7 @@ public class IdentityService(
         if (config["License"] is not { } license)
             throw new InvalidOperationException("License is not configured");
 
-        var client = new HttpClient();
+        using var client = httpClientFactory.CreateClient();
         var server = config["Server"]!;
         client.BaseAddress = new Uri($"{server}/api/");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", license);
