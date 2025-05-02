@@ -91,7 +91,7 @@ namespace Api.Migrations
                     room_id = table.Column<long>(type: "bigint", nullable: false),
                     name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     mac_address = table.Column<string>(type: "character varying(17)", maxLength: 17, nullable: true),
-                    ip_address = table.Column<string>(type: "character varying(12)", maxLength: 12, nullable: true),
+                    ip_address = table.Column<string>(type: "character varying(15)", maxLength: 15, nullable: true),
                     last_seen = table.Column<Instant>(type: "timestamp with time zone", nullable: false),
                     last_user = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     version = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: true)

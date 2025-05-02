@@ -23,7 +23,7 @@ public class Computer
     [MaxLength(17)]
     public string? MacAddress { get; set; }
 
-    [Column("ip_address")] [MaxLength(12)] public string? IpAddress { get; set; }
+    [Column("ip_address")] [MaxLength(15)] public string? IpAddress { get; set; }
 
     [Column("last_seen")] public Instant LastSeen { get; set; }
 

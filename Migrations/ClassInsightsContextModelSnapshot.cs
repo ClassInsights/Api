@@ -54,8 +54,8 @@ namespace Api.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("ComputerId"));
 
                     b.Property<string>("IpAddress")
-                        .HasMaxLength(12)
-                        .HasColumnType("character varying(12)")
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)")
                         .HasColumnName("ip_address");
 
                     b.Property<Instant>("LastSeen")
