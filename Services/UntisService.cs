@@ -67,7 +67,7 @@ public class UntisService(
                 timetable = await GetTimetableAsync(roomIds);
             }
 
-            if (timetable.UntisHeaderData is { SchoolYearEnd: { } endDate, SchoolYearStart: { } startDate })
+            if (timetable.HeaderData is { SchoolYearEnd: { } endDate, SchoolYearStart: { } startDate })
             {
                 await settingsService.SetSettingAsync("SchoolYearStart",
                     startDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
@@ -78,7 +78,7 @@ public class UntisService(
             // update classes, rooms and subjects
             await UpdateMasterDataAsync(timetable, context);
 
-            if (timetable.UntisTimetableData.Periods is { Count: > 0 } periods)
+            if (timetable.TimetableData.Periods is { Count: > 0 } periods)
             {
                 var tz = DateTimeZoneProviders.Tzdb.GetSystemDefault();
 
@@ -127,7 +127,7 @@ public class UntisService(
 
     private async Task UpdateMasterDataAsync(UntisTimetable untisTimetable, ClassInsightsContext context)
     {
-        if (untisTimetable.UntisMasterData.Rooms is { Count: > 0 } rooms)
+        if (untisTimetable.MasterData.Rooms is { Count: > 0 } rooms)
         {
             var dbRooms = rooms.Select(x => new Room
             {
@@ -138,7 +138,7 @@ public class UntisService(
                 config => { config.PropertiesToExclude = [nameof(Room.Regex), nameof(Room.Enabled)]; });
         }
 
-        if (untisTimetable.UntisMasterData.Subjects is { Count: > 0 } subjects)
+        if (untisTimetable.MasterData.Subjects is { Count: > 0 } subjects)
         {
             var dbSubjects = subjects.Select(x => new Subject
             {
@@ -148,7 +148,7 @@ public class UntisService(
             await context.BulkInsertOrUpdateAsync(dbSubjects);
         }
 
-        if (untisTimetable.UntisMasterData.Classes is { Count: > 0 } classes)
+        if (untisTimetable.MasterData.Classes is { Count: > 0 } classes)
         {
             var dbClasses = classes.Select(x => new Class
             {

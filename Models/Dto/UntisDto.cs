@@ -6,9 +6,9 @@ namespace Api.Models.Dto;
 public class UntisTimetable
 {
     public string Version { get; init; } = null!;
-    public UntisHeaderData UntisHeaderData { get; init; } = null!;
-    public UntisMasterData UntisMasterData { get; init; } = null!;
-    public UntisTimetableData UntisTimetableData { get; init; } = null!;
+    public UntisHeaderData HeaderData { get; init; } = null!;
+    public UntisMasterData MasterData { get; init; } = null!;
+    public UntisTimetableData TimetableData { get; init; } = null!;
 }
 
 public class UntisHeaderData
@@ -18,7 +18,7 @@ public class UntisHeaderData
     public UntisSchoolDto School { get; set; } = null!;
     public LocalDate? SchoolYearStart { get; init; }
     public LocalDate? SchoolYearEnd { get; init; }
-    public UntisFilter UntisFilter { get; set; } = null!;
+    public UntisFilter Filter { get; set; } = null!;
 }
 
 public class UntisFilter
