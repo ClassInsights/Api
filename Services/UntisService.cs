@@ -28,11 +28,18 @@ public class UntisService(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         logger.LogInformation("UntisService is running");
-        using PeriodicTimer timer = new(TimeSpan.FromMinutes(20));
+        using PeriodicTimer timer = new(TimeSpan.FromMinutes(30));
         try
         {
             do
             {
+                var hour = clock.GetCurrentInstant().InZone(DateTimeZoneProviders.Tzdb.GetSystemDefault()).Hour;
+                if (_fetchCount != 0 && hour is < 6 or > 18)
+                {
+                    logger.LogInformation("Time is not between 6:00 and 18:00. Skipping update.");
+                    continue;
+                }
+                
                 await UpdateUntisRecords();
                 _fetchCount++;
             } while (await timer.WaitForNextTickAsync(stoppingToken));
