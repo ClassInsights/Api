@@ -7,7 +7,7 @@ namespace Api.Controllers;
 [ApiController]
 public class ClientController(IHttpClientFactory httpClientFactory, ILogger<ClientController> logger) : ControllerBase
 {
-    private const string ClientVersion = "1.0.0.1";
+    private const string ClientVersion = "1.0.0.0";
     private const string DownloadBaseUrl = "https://github.com/ClassInsights/WinService/releases/download";
 
     [HttpGet("version")]
