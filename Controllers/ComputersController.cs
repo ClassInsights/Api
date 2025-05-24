@@ -44,7 +44,7 @@ public class ComputersController(ClassInsightsContext context) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetComputer(string name)
     {
-        if (await context.Computers.AsNoTracking().FirstOrDefaultAsync(x => x.Name.Contains(name)) is { } computer)
+        if (await context.Computers.AsNoTracking().FirstOrDefaultAsync(x => x.Name.Equals(name)) is { } computer)
             return Ok(computer.ToDto());
         return NotFound();
     }
