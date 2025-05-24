@@ -167,7 +167,7 @@ public class WebSocketController(IClock clock, ClassInsightsContext context) : C
                 CancellationToken.None);
     }
 
-    private record Heartbeat(long ComputerId, string Type, string Name, int Room, DateTime UpTime, Data? Data);
+    private record Heartbeat(long ComputerId, string Type, string Name, long? Room, DateTime UpTime, Data? Data);
 
     private record Data(
         float Power,
