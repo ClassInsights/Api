@@ -15,7 +15,7 @@ public class Computer
 
     [Column("room_id")]
     [ForeignKey("Room")]
-    public long RoomId { get; set; }
+    public long? RoomId { get; set; }
 
     [Column("name")] [MaxLength(50)] public string Name { get; set; } = null!;
 

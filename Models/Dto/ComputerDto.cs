@@ -9,7 +9,7 @@ public record ComputerDto(
     [property: Description("Id of the computer")]
     long ComputerId,
     [property: Description("Id of the room the computer is in")]
-    long RoomId,
+    long? RoomId,
     [MaxLength(50)]
     [property: Description("Name of the computer")]
     string Name,
