@@ -38,7 +38,7 @@ public class IdentityService(
             throw new InvalidOperationException("License is not configured");
 
         using var client = httpClientFactory.CreateClient();
-        var server = config["Server"]!;
+        var server = config["Server"] ?? "https://classinsights.at";
         client.BaseAddress = new Uri($"{server}/api/");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", license);
 

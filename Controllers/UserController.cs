@@ -49,7 +49,7 @@ public class UserController(
     {
         using var client = httpClientFactory.CreateClient();
 
-        var server = config["Server"]!;
+        var server = config["Server"] ?? "https://classinsights.at";
         var response = await client.PostAsJsonAsync($"{server}/api/school/dashboard/user", new
         {
             dashboard_token = token.DashboardToken
