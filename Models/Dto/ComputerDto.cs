@@ -16,7 +16,7 @@ public record ComputerDto(
     [MaxLength(17)]
     [property: Description("Mac address of the computer")]
     string? MacAddress,
-    [MaxLength(12)]
+    [MaxLength(16)]
     [property: Description("Ip address of the computer")]
     string? IpAddress,
     [property: Description("Last time the computer was active")]
