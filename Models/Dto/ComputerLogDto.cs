@@ -16,6 +16,9 @@ public record ComputerLogDto(
     [property: Description("Level of the log entry")]
     string Level,
     [MaxLength(250)]
+    [property: Description("Category of the log entry")]
+    string Category,
+    [MaxLength(250)]
     [property: Description("Short message of the log entry")]
     string Message,
     [property: Description("Longer description of the log entry")]
@@ -30,6 +33,7 @@ public record ComputerLogDto(
                 ComputerId = ComputerId,
                 Timestamp = Timestamp,
                 Level = Level,
+                Category = Category,
                 Message = Message,
                 Details = Details,
             }

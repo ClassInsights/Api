@@ -28,6 +28,11 @@ public class ComputerLog
     [Column("level")]
     [MaxLength(15)]
     public string Level { get; set; } = null!;
+    
+    [Required]
+    [Column("category")]
+    [MaxLength(250)]
+    public string Category { get; set; } = null!;
 
     [Required]
     [Column("message")]
@@ -42,6 +47,6 @@ public class ComputerLog
     
     public ComputerLogDto ToDto()
     {
-        return new ComputerLogDto(ComputerLogId, ComputerId, Timestamp, Level, Message, Details);
+        return new ComputerLogDto(ComputerLogId, ComputerId, Timestamp, Level, Category, Message, Details);
     }
 }
