@@ -13,6 +13,39 @@ namespace Api.Controllers;
 [ApiController]
 public class ComputersController(ClassInsightsContext context) : ControllerBase
 {
+    [HttpPatch]
+    [Authorize(Roles = "Admin")]
+    [EndpointSummary("Update multiple computers")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateComputers(
+        [FromBody] [Description("List of computer which you want to update")] List<ComputerDto> computers)
+    {
+        if (computers.Count == 0)
+            return BadRequest("No Computers provided.");
+
+        var ids = computers.Select(c => c.ComputerId).ToList();
+        var dbComputers = await context.Computers.Where(c => ids.Contains(c.ComputerId)).ToListAsync();
+
+        foreach (var dto in computers)
+        {
+            var dbComputer = dbComputers.FirstOrDefault(c => c.ComputerId == dto.ComputerId);
+            if (dbComputer == null)
+                continue;
+
+            dbComputer.RoomId = dto.RoomId;
+            dbComputer.Name = dto.Name;
+            dbComputer.MacAddress = dto.MacAddress;
+            dbComputer.IpAddress = dto.IpAddress;
+            dbComputer.LastSeen = dto.LastSeen;
+            dbComputer.LastUser = dto.LastUser;
+            dbComputer.Version = dto.Version;
+        }
+
+        await context.SaveChangesAsync();
+        return Ok();
+    }
+
+
     [HttpPost]
     [Authorize(Roles = "Computer")]
     [EndpointSummary("Add or update a computer")]
