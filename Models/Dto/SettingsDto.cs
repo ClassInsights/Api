@@ -29,4 +29,12 @@ public class SettingsDto
         [Description("Delay in minutes before shutdown is sent")]
         public int ShutdownDelay { get; set; } = 3;
     }
+
+    public class AdCredentials
+    {
+        public string Domain { get; set; } = null!;
+        public int Port { get; set; }
+        public string Username { get; set; } = null!;
+        public string Password { get; set; }  = null!;
+    }
 }
