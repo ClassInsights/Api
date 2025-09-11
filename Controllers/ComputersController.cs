@@ -3,6 +3,7 @@ using System.Net.WebSockets;
 using System.Text;
 using Api.Models.Database;
 using Api.Models.Dto;
+using Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +12,7 @@ namespace Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ComputersController(ClassInsightsContext context) : ControllerBase
+public class ComputersController(ClassInsightsContext context, SettingsService settingsService) : ControllerBase
 {
     [HttpPatch]
     [Authorize(Roles = "Admin")]
@@ -54,8 +55,21 @@ public class ComputersController(ClassInsightsContext context) : ControllerBase
         [Description("Computer which you want to add or update")]
         ComputerDto computerDto)
     {
+        var credentials = await settingsService.GetSettingAsync<SettingsDto.AdCredentials>("ad");
+        
         // map to the database object to receive new ComputerId if it was created
         var dbComputer = computerDto.ToComputer();
+        
+        // ad sync
+        if (credentials != null && (dbComputer.RoomId == null || credentials.AutoSync))
+        {
+            var room = await context.Rooms.FirstOrDefaultAsync(x => x.OrganizationUnit == computerDto.OrganizationUnit);
+            if (room != null)
+            {
+                dbComputer.RoomId = room.RoomId;
+            }
+        }
+        
         context.Update(dbComputer);
         await context.SaveChangesAsync();
 

@@ -16,18 +16,6 @@ namespace Api.Controllers;
 public class RoomsController(IClock clock, ClassInsightsContext context, UntisService untisService)
     : ControllerBase
 {
-    [HttpGet("{roomName}")]
-    [EndpointSummary("Find a room by name")]
-    [ProducesResponseType<RoomDto>(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetRoomByName([Description("Name of the room you want to find")] string roomName)
-    {
-        var room = await context.Rooms.FirstOrDefaultAsync(x => x.Regex != null && Regex.IsMatch(roomName, x.Regex));
-        if (room == null)
-            return NotFound();
-        return Ok(room.ToDto());
-    }
-
     [HttpPatch("{roomId:long}")]
     [AllowAnonymous]
     [EndpointSummary("Update a room by id")]
@@ -39,7 +27,7 @@ public class RoomsController(IClock clock, ClassInsightsContext context, UntisSe
         if (room is null)
             return NotFound();
 
-        room.Regex = roomDto.Regex;
+        room.OrganizationUnit = roomDto.OrganizationUnit;
         room.Enabled = roomDto.Enabled;
 
         await context.SaveChangesAsync();
@@ -81,7 +69,7 @@ public class RoomsController(IClock clock, ClassInsightsContext context, UntisSe
     public async Task<IActionResult> GetRooms()
     {
         var rooms = await context.Rooms.AsNoTracking().Include(dbRoom => dbRoom.Computers).Select(room =>
-            new RoomDto(room.RoomId, room.Enabled, room.DisplayName!, room.Regex!, room.Computers.Count)).ToListAsync();
+            new RoomDto(room.RoomId, room.Enabled, room.DisplayName!, room.OrganizationUnit, room.Computers.Count)).ToListAsync();
         return Ok(rooms);
     }
 

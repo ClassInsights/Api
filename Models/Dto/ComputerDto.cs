@@ -26,7 +26,10 @@ public record ComputerDto(
     string? LastUser,
     [MaxLength(10)]
     [property: Description("Version of the client installed on the computer")]
-    string? Version
+    string? Version,
+    [MaxLength(2500)]
+    [property: Description("Organization Unit the computer is part of")]
+    string? OrganizationUnit
 )
 {
     [Description("Status of the computer (Online or Offline)")]

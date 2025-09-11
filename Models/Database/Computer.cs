@@ -35,6 +35,6 @@ public class Computer
 
     public ComputerDto ToDto()
     {
-        return new ComputerDto(ComputerId, RoomId, Name, MacAddress, IpAddress, LastSeen, LastUser, Version);
+        return new ComputerDto(ComputerId, RoomId, Name, MacAddress, IpAddress, LastSeen, LastUser, Version, null);
     }
 }

@@ -17,7 +17,9 @@ public class Room
     [Column("display_name")]
     public string? DisplayName { get; set; }
 
-    [MaxLength(100)] [Column("regex")] public string? Regex { get; set; }
+    [MaxLength(2500)]
+    [Column("organization_unit")]
+    public string? OrganizationUnit { get; set; }
 
     [Column("enabled")]
     [DefaultValue(false)]
@@ -29,6 +31,6 @@ public class Room
 
     public RoomDto ToDto()
     {
-        return new RoomDto(RoomId, Enabled, DisplayName, Regex, Computers.Count);
+        return new RoomDto(RoomId, Enabled, DisplayName, OrganizationUnit, Computers.Count);
     }
 }

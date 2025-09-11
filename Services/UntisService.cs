@@ -142,7 +142,7 @@ public class UntisService(
                 DisplayName = x.DisplayName
             }).ToList();
             await context.BulkInsertOrUpdateAsync(dbRooms,
-                config => { config.PropertiesToExclude = [nameof(Room.Regex), nameof(Room.Enabled)]; });
+                config => { config.PropertiesToExclude = [nameof(Room.OrganizationUnit), nameof(Room.Enabled)]; });
         }
 
         if (untisTimetable.MasterData.Subjects is { Count: > 0 } subjects)

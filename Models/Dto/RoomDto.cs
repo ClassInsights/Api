@@ -10,8 +10,8 @@ public record RoomDto(
     bool Enabled,
     [property: Description("Name of the room")]
     string? DisplayName,
-    [property: Description("Regex to match the name of the computer")]
-    string? Regex,
+    [property: Description("OrganizationUnit where the clients belong to")]
+    string? OrganizationUnit,
     [property: Description("Number of devices in the room")]
     int? DeviceCount
 )
@@ -23,7 +23,7 @@ public record RoomDto(
             RoomId = RoomId,
             Enabled = Enabled,
             DisplayName = DisplayName,
-            Regex = Regex
+            OrganizationUnit = OrganizationUnit
         };
     }
 }
