@@ -29,16 +29,23 @@ public class AdController(SettingsService settingsService, ILogger<AdController>
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> SetCredentials(SettingsDto.AdCredentials credentials)
     {
-        try
+        if (credentials.Password != null)
         {
-            var identifier = new LdapDirectoryIdentifier(credentials.Domain, credentials.Port);
-            var credential = new NetworkCredential(credentials.Username, credentials.Password);
-            using var ldap = new LdapConnection(identifier, credential, AuthType.Basic);
-            ldap.Bind();
+            try
+            {
+                var identifier = new LdapDirectoryIdentifier(credentials.Domain, credentials.Port);
+                var credential = new NetworkCredential(credentials.Username, credentials.Password);
+                using var ldap = new LdapConnection(identifier, credential, AuthType.Basic);
+                ldap.Bind();
+            }
+            catch (Exception)
+            {
+                return Forbid();
+            }
         }
-        catch (Exception)
+        else
         {
-            return Forbid();
+            credentials.Password = (await settingsService.GetSettingAsync<SettingsDto.AdCredentials>("ad"))?.Password;
         }
         
         await settingsService.SetSettingAsync("ad", credentials);
