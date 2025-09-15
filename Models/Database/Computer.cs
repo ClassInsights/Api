@@ -30,11 +30,13 @@ public class Computer
     [Column("last_user")] [MaxLength(50)] public string? LastUser { get; set; }
 
     [Column("version")] [MaxLength(10)] public string? Version { get; set; }
+    
+    [Column("organization_unit")] [MaxLength(2500)] public string? OrganizationUnit { get; set; }
 
     public virtual Room Room { get; set; } = null!;
 
     public ComputerDto ToDto()
     {
-        return new ComputerDto(ComputerId, RoomId, Name, MacAddress, IpAddress, LastSeen, LastUser, Version, null);
+        return new ComputerDto(ComputerId, RoomId, Name, MacAddress, IpAddress, LastSeen, LastUser, Version, OrganizationUnit);
     }
 }

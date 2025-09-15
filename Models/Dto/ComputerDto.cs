@@ -46,7 +46,8 @@ public record ComputerDto(
             IpAddress = IpAddress,
             LastSeen = LastSeen,
             LastUser = LastUser,
-            Version = Version
+            Version = Version,
+            OrganizationUnit = OrganizationUnit
         };
     }
 }
