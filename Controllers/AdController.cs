@@ -38,8 +38,9 @@ public class AdController(SettingsService settingsService, ILogger<AdController>
                 using var ldap = new LdapConnection(identifier, credential, AuthType.Basic);
                 ldap.Bind();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.LogError(ex, "Error while saving AD Creds");
                 return Forbid();
             }
         }
