@@ -1,9 +1,11 @@
 using System.Text;
 using System.Threading.RateLimiting;
 using Api.Extensions;
+using Api.Handlers;
 using Api.Models.Database;
 using Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -53,6 +55,9 @@ builder.Services.AddAuthentication(options =>
 builder.Services.Configure<RouteOptions>(options => { options.LowercaseUrls = true; });
 
 builder.Services.AddAuthorization();
+
+// let owner bypass all auth roles
+builder.Services.AddSingleton<IAuthorizationHandler, OwnerBypassAuthorizationHandler>();
 
 if (builder.Environment.IsProduction())
 {
