@@ -18,11 +18,11 @@ public record ComputerLogDto(
     [MaxLength(250)]
     [property: Description("Category of the log entry")]
     string Category,
-    [MaxLength(250)]
+    [MaxLength(500)]
     [property: Description("Short message of the log entry")]
     string Message,
     [property: Description("Longer description of the log entry")]
-    [MaxLength(1500)]
+    [MaxLength(5000)]
     string? Details
 )
 {

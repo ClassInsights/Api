@@ -36,11 +36,11 @@ public class ComputerLog
 
     [Required]
     [Column("message")]
-    [MaxLength(250)]
+    [MaxLength(500)]
     public string Message { get; set; } = null!;
 
     [Column("details")]
-    [MaxLength(1500)]
+    [MaxLength(5000)]
     public string? Details { get; set; }
     
     public virtual Computer Computer { get; set; } = null!;
