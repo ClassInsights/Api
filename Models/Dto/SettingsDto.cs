@@ -36,6 +36,6 @@ public class SettingsDto
         public int Port { get; set; }
         public string Username { get; set; } = null!;
         public string? Password { get; set; }
-        public bool AutoSync { get; set; } 
+        public bool AutoSync { get; set; }
     }
 }

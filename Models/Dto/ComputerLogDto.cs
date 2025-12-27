@@ -28,15 +28,14 @@ public record ComputerLogDto(
 {
     public ComputerLog ToComputerLog()
     {
-        return new ComputerLog()
-            {
-                ComputerId = ComputerId,
-                Timestamp = Timestamp,
-                Level = Level,
-                Category = Category,
-                Message = Message,
-                Details = Details,
-            }
-        ;
+        return new ComputerLog
+        {
+            ComputerId = ComputerId,
+            Timestamp = Timestamp,
+            Level = Level,
+            Category = Category,
+            Message = Message,
+            Details = Details
+        };
     }
 }

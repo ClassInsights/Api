@@ -12,6 +12,7 @@ public class ClassInsightsContext(DbContextOptions<ClassInsightsContext> options
     public virtual DbSet<Subject> Subjects { get; set; }
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<ComputerLog> ComputerLogs { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Room>().Property(x => x.Enabled).HasDefaultValue(false);

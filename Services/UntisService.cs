@@ -37,10 +37,11 @@ public class UntisService(
                 if (hour is < 6 or > 18)
                 {
                     logger.LogInformation("Time is not between 6:00 and 18:00. Skipping update.");
-                    _fetchCount = 0; // reset after a school day to ensure that the first iteration the next day (after 6:00) will fetch all lessons
+                    _fetchCount =
+                        0; // reset after a school day to ensure that the first iteration the next day (after 6:00) will fetch all lessons
                     continue;
                 }
-                
+
                 await UpdateUntisRecords();
                 _fetchCount++;
             } while (await timer.WaitForNextTickAsync(stoppingToken));

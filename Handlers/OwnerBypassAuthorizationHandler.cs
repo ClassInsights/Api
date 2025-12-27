@@ -8,7 +8,7 @@ public class OwnerBypassAuthorizationHandler : IAuthorizationHandler
     {
         if (!context.User.IsInRole("Owner"))
             return Task.CompletedTask;
-        
+
         foreach (var requirement in context.PendingRequirements.ToList())
             context.Succeed(requirement);
 

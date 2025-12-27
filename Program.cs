@@ -114,12 +114,11 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference(options =>
     {
-        options.Title = "ClassInsights API";
-        options.Theme = ScalarTheme.Kepler;
-        options.Authentication = new ScalarAuthenticationOptions
-        {
-            PreferredSecurityScheme = IdentityConstants.BearerScheme
-        };
+        options.WithTitle("ClassInsights API")
+            .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
+            .WithTheme(ScalarTheme.Kepler)
+            .WithFavicon("https://classinsights.at/favicon.ico")
+            .AddPreferredSecuritySchemes(IdentityConstants.BearerScheme);
     });
 }
 

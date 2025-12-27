@@ -14,7 +14,6 @@ public class ComputerLogsController(ClassInsightsContext context) : ControllerBa
     [EndpointSummary("Create a new computer log")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ComputerLogDto>(StatusCodes.Status201Created)]
-
     public async Task<IActionResult> PostLog(string computerId, [FromBody] ComputerLogDto log)
     {
         if (computerId != log.ComputerId.ToString())

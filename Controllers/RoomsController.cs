@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using System.Text.RegularExpressions;
 using Api.Models.Database;
 using Api.Models.Dto;
 using Api.Services;
@@ -69,7 +68,8 @@ public class RoomsController(IClock clock, ClassInsightsContext context, UntisSe
     public async Task<IActionResult> GetRooms()
     {
         var rooms = await context.Rooms.AsNoTracking().Include(dbRoom => dbRoom.Computers).Select(room =>
-            new RoomDto(room.RoomId, room.Enabled, room.DisplayName!, room.OrganizationUnit, room.Computers.Count)).ToListAsync();
+                new RoomDto(room.RoomId, room.Enabled, room.DisplayName!, room.OrganizationUnit, room.Computers.Count))
+            .ToListAsync();
         return Ok(rooms);
     }
 

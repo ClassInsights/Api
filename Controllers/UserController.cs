@@ -65,7 +65,8 @@ public class UserController(
         var userSchoolDto = userDto?.Schools.FirstOrDefault(s => s.SchoolId == schoolDto.SchoolId);
 
         if (userSchoolDto == null ||
-            (!userSchoolDto.Roles.Contains("Admin") && !userSchoolDto.Roles.Contains("Teacher") && !userSchoolDto.Roles.Contains("Owner")))
+            (!userSchoolDto.Roles.Contains("Admin") && !userSchoolDto.Roles.Contains("Teacher") &&
+             !userSchoolDto.Roles.Contains("Owner")))
             return Unauthorized();
 
         var user = context.Users.Update(new User

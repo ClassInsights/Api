@@ -1,8 +1,8 @@
+using System.DirectoryServices.Protocols;
+using System.Net;
 using Api.Models.Dto;
 using Api.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.DirectoryServices.Protocols;
-using System.Net;
 
 namespace Api.Controllers;
 
@@ -16,21 +16,20 @@ public class AdController(SettingsService settingsService, ILogger<AdController>
     public async Task<IActionResult> GetCredentials()
     {
         var credentials = await settingsService.GetSettingAsync<SettingsDto.AdCredentials>("ad");
-        
+
         if (credentials == null)
             return Forbid();
-        
+
         credentials.Password = "";
         return Ok(credentials);
     }
-    
+
     [HttpPost("credentials")]
     [EndpointSummary("Set credentials which are used for the Active Directory synchronization")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> SetCredentials(SettingsDto.AdCredentials credentials)
     {
         if (credentials.Password != null)
-        {
             try
             {
                 var identifier = new LdapDirectoryIdentifier(credentials.Domain, credentials.Port);
@@ -43,16 +42,13 @@ public class AdController(SettingsService settingsService, ILogger<AdController>
                 logger.LogError(ex, "Error while saving AD Creds");
                 return Forbid();
             }
-        }
         else
-        {
             credentials.Password = (await settingsService.GetSettingAsync<SettingsDto.AdCredentials>("ad"))?.Password;
-        }
-        
+
         await settingsService.SetSettingAsync("ad", credentials);
         return Ok();
     }
-    
+
     [HttpGet("units")]
     [EndpointSummary("Get all OUs for the configured Active Directory")]
     [ProducesResponseType<List<string>>(StatusCodes.Status200OK)]
@@ -91,7 +87,7 @@ public class AdController(SettingsService settingsService, ILogger<AdController>
             var ouSearchResp = (SearchResponse)ldap.SendRequest(ouSearchReq);
 
             var ouNames = (from SearchResultEntry entry in ouSearchResp.Entries
-                           select entry.DistinguishedName).ToList();
+                select entry.DistinguishedName).ToList();
 
             return Ok(ouNames);
         }

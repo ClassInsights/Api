@@ -20,15 +20,13 @@ public class ComputerLog
     [ForeignKey("Computer")]
     public long ComputerId { get; set; }
 
-    [Required]
-    [Column("timestamp")]
-    public Instant Timestamp { get; set; }
+    [Required] [Column("timestamp")] public Instant Timestamp { get; set; }
 
     [Required]
     [Column("level")]
     [MaxLength(15)]
     public string Level { get; set; } = null!;
-    
+
     [Required]
     [Column("category")]
     [MaxLength(250)]
@@ -39,12 +37,10 @@ public class ComputerLog
     [MaxLength(500)]
     public string Message { get; set; } = null!;
 
-    [Column("details")]
-    [MaxLength(5000)]
-    public string? Details { get; set; }
-    
+    [Column("details")] [MaxLength(5000)] public string? Details { get; set; }
+
     public virtual Computer Computer { get; set; } = null!;
-    
+
     public ComputerLogDto ToDto()
     {
         return new ComputerLogDto(ComputerLogId, ComputerId, Timestamp, Level, Category, Message, Details);

@@ -19,7 +19,8 @@ public class ComputersController(ClassInsightsContext context, SettingsService s
     [EndpointSummary("Update multiple computers")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateComputers(
-        [FromBody] [Description("List of computer which you want to update")] List<ComputerDto> computers)
+        [FromBody] [Description("List of computer which you want to update")]
+        List<ComputerDto> computers)
     {
         if (computers.Count == 0)
             return BadRequest("No Computers provided.");
@@ -56,20 +57,17 @@ public class ComputersController(ClassInsightsContext context, SettingsService s
         ComputerDto computerDto)
     {
         var credentials = await settingsService.GetSettingAsync<SettingsDto.AdCredentials>("ad");
-        
+
         // map to the database object to receive new ComputerId if it was created
         var dbComputer = computerDto.ToComputer();
-        
+
         // ad sync
         if (credentials != null && (dbComputer.RoomId == null || credentials.AutoSync))
         {
             var room = await context.Rooms.FirstOrDefaultAsync(x => x.OrganizationUnit == computerDto.OrganizationUnit);
-            if (room != null)
-            {
-                dbComputer.RoomId = room.RoomId;
-            }
+            if (room != null) dbComputer.RoomId = room.RoomId;
         }
-        
+
         context.Update(dbComputer);
         await context.SaveChangesAsync();
 
