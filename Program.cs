@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NodaTime;
 using NodaTime.Serialization.SystemTextJson;
+using Npgsql;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,9 +25,14 @@ builder.Services.AddControllers()
 builder.Services.AddSingleton<IClock>(SystemClock.Instance);
 
 // Add database connection
+var connectionStringBuilder = new NpgsqlConnectionStringBuilder(builder.Configuration.GetConnectionString("npgsql"))
+    {
+        // https://www.npgsql.org/doc/security.html#gss-session-encryption-gss-api
+        GssEncryptionMode = GssEncryptionMode.Disable
+    };
 builder.Services.AddDbContext<ClassInsightsContext>(options =>
 {
-    options.UseNpgsql(builder.Configuration.GetConnectionString("npgsql"), o => o.UseNodaTime());
+    options.UseNpgsql(connectionStringBuilder.ToString(), o => o.UseNodaTime());
 });
 
 // Add Settings Service
