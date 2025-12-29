@@ -11,7 +11,7 @@
 
     <ItemGroup>
         <PackageReference Include="Docker.DotNet" Version="3.125.15"/>
-        <PackageReference Include="EFCore.BulkExtensions.Dotnet10.PostgreSql" Version="10.0.0"/>
+        <PackageReference Include="EFCore.BulkExtensions.MIT.PostgreSql" Version="10.22.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.1"/>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.1"/>
